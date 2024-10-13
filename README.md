@@ -85,7 +85,7 @@ print(y.grad)  # Gradients of y
 
 ## 🤝 Contributing
 
-We ❤️ contributions! If you’d like to contribute to **CGrad**, please:
+I ❤️ contributions! If you’d like to contribute to **CGrad**, please:
 
 1. 🍴 Fork the repository.
 2. 🌱 Create a new branch for your feature or bugfix.
