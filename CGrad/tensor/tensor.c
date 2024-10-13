@@ -49,17 +49,17 @@ CTensor* init_tensor(float *data, int *shape, int ndim){
     return newtensor;
 }
 
-CTensor* add_tensor(float *data1, float *data2, int *shape, int ndim, int size){
+CTensor* add_tensor(CTensor* tensor1, CTensor* tensor2){
     // Allocate exactly 'size' elements for the result
-    float *data = (float*)malloc(size * sizeof(float));
+    float *data = (float*)malloc(tensor1->size * sizeof(float));
 
     // Perform the element-wise addition
-    for (int k = 0; k < size; k++){
-        data[k] = data1[k] + data2[k];
+    for (int k = 0; k < tensor1->size; k++){
+        data[k] = tensor1->data[k] + tensor2->data[k];
     }
 
     // Initialize a new tensor with the result of the addition
-    CTensor* added_tensor = init_tensor(data, shape, ndim); 
+    CTensor* added_tensor = init_tensor(data, tensor1->shape, tensor1->dim); 
     return added_tensor;
 }
 
@@ -75,16 +75,6 @@ void display_tensor(CTensor *tensor){
     printf("), Dim = %d ]\n", tensor->dim);
 }
 
-int main(){
-    float data[] = {1., 2., 3., 4., 5., 6., 7., 8., 9.};
-    int shape[] = {3, 3};
-    int ndim = len(shape);
-    CTensor *tensor1 = init_tensor(data, shape, ndim);
-    CTensor *tensor2 = init_tensor(data, shape, ndim);
-
-    CTensor *add_tensor_1 = add_tensor(tensor1->data, tensor2->data, tensor1->shape, tensor1->dim, tensor1->size);
-
-    display_tensor(add_tensor_1);
-    
-    return 0;
-}
+// int main(){
+//     
+// }

@@ -12,5 +12,5 @@ typedef struct{
 void cal_stride(CTensor *tensor);
 CTensor* init_tensor(float *data, int *shape, int dim);
 void display_tensor(CTensor *tensor);
-CTensor* add_tensor(float *data1, float *data2, int *shape, int ndim, int size);
+CTensor* add_tensor(CTensor* tensor1, CTensor* tensor2);
 #endif

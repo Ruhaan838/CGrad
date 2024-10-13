@@ -11,7 +11,7 @@ cdef extern from "storage.h":
         int size
     
     CTensor* init_tensor(float *data, int *shape, int dim)
-    CTensor* add_tensor(float *data1, float *data2, int *shape, int ndim, int size)
+    CTensor* add_tensor(CTensor* tensro1, CTensor* tensor2)
 
 cdef class Tensor:
     cdef CTensor* tensor
@@ -119,7 +119,7 @@ cdef class Tensor:
             raise ValueError("Shapes of the tensors must be the same for addition.")
 
        
-        new_add_tensor = add_tensor(self.tensor.data, other.tensor.data, self.tensor.shape, self.tensor.dim, self.tensor.size)
+        new_add_tensor = add_tensor(self.tensor, other.tensor)
 
         if new_add_tensor is NULL:
             raise MemoryError("Failed to allocate memory for the result tensor.")
