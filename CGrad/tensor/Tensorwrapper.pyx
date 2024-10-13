@@ -155,4 +155,4 @@ cdef class Tensor:
         return Tensor(new_added_data)
 
     def __repr__(self):
-        return f"\nTensor(Data = {self._item}, Shape = {self._shape})\n"
+        return f"Tensor(Data = {self._item}, Shape = {self._shape})"
