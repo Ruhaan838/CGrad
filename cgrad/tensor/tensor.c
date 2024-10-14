@@ -63,6 +63,19 @@ CTensor* add_tensor(CTensor* tensor1, CTensor* tensor2){
     return added_tensor;
 }
 
+// element-wise multiplication
+CTensor* mul_ele_tensor(CTensor* tensor1, CTensor* tensor2){
+
+    float *data = (float*)mallco(tensor1->size * sizeof(float));
+    // element wise multiplication
+    for (int k = 0; k < tensor1->size; k++){
+        data[k] = tensor1->data[k] * tensor2->data[k];
+    }
+
+    CTensor* mul_tensor = init_tensor(data, tensor1->shape, tensor1->dim);
+    return mul_tensor;
+}
+
 void display_tensor(CTensor *tensor){
     printf("Tensor [data = (");
     for (int i = 0; i < tensor->size; i++){
