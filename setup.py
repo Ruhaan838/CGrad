@@ -14,10 +14,9 @@ ex = [
 setup(
     name="CGrad",
     version="0.1",
-    ext_modules=cythonize(ex),
+    ext_modules=cythonize(ex, annotate=True),
     license="mit",
     install_requires=["numpy"],
     package_dir={'cgrad': 'cgrad'},
     packages=find_packages(where='CGrad'),
-    
 )
