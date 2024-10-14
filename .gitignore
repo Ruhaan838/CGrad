@@ -1,4 +1,4 @@
 /build
-/CGrad/__pycache__
-/CGrad/tensor/__pycache__
-/CGrad/tensor/Tensorwrapper.c
+/cgrad/__pycache__
+/cgrad/tensor/__pycache__
+/cgrad/tensor/Tensorwrapper.c
