@@ -99,8 +99,8 @@ cdef class Tensor:
 
     def __add__(self, other):
         """
-        Overloaded function for adding tensors or adding a scalar to a tensor.
-        Dispatches to the appropriate helper function based on the type of 'other'.
+        Function for adding tensors or adding a scalar to a tensor.
+
         """
 
         if isinstance(other, Tensor):
@@ -109,6 +109,17 @@ cdef class Tensor:
             return self._add_scalar(other)
         else:
             raise TypeError(f"Unsupported type for addition: {type(other)}")
+
+    def __radd__(self, other):
+        """
+        Function for reverse addition also scalar.
+        """
+        if isinstance(other, Tensor):
+            return self._add_tensor(other)
+        elif isinstance(other, (int, float)):
+            return self._add_scalar(other)
+        else:
+            raise TypeError(f"Unspported type for additation: {type(other)}")
 
     cdef _add_tensor(self, Tensor other):
         """
@@ -125,9 +136,9 @@ cdef class Tensor:
             raise MemoryError("Failed to allocate memory for the result tensor.")
 
         
-        new_added_data = [new_add_tensor.data[i] for i in range(new_add_tensor.size)]
+        new_added_data = np.array([new_add_tensor.data[i] for i in range(new_add_tensor.size)])
         new_shape = tuple(new_add_tensor.shape[i] for i in range(new_add_tensor.dim))
-        
+        new_added_data = new_added_data.reshape(new_shape)
         return Tensor(new_added_data)
 
     cdef _add_scalar(self, double scalar):
@@ -149,9 +160,9 @@ cdef class Tensor:
             free(result_data)
             raise MemoryError("Failed to allocate memory for the result tensor.")
 
-        new_added_data = [new_add_tensor.data[i] for i in range(new_add_tensor.size)]
+        new_added_data = np.array([new_add_tensor.data[i] for i in range(new_add_tensor.size)])
         new_shape = tuple(new_add_tensor.shape[i] for i in range(new_add_tensor.dim))
-        
+        new_added_data = new_added_data.reshape(new_shape)
         return Tensor(new_added_data)
 
     def __repr__(self):
