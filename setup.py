@@ -21,9 +21,9 @@ setup(
     package_dir={'CGrad': 'CGrad'},
     packages=find_packages(where='CGrad'),
     language_level=3,
-    options={
-        'build_ext': {
-            'build_lib': os.path.abspath('CGrad'),  # Define custom output directory
-        }
-    }
+    # options={
+    #     'build_ext': {
+    #         'build_lib': os.path.abspath('CGrad'),  # Define custom output directory
+    #     }
+    # }
 )
