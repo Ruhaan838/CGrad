@@ -1,4 +1,4 @@
-## for new this is to depend on numpy but I try my hard to avoid this (🤞)
+## for now this is to depend on numpy but I try my hard to avoid this (🤞)
 from libc.stdlib cimport malloc, free
 import numpy as np
 
