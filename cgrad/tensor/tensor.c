@@ -66,7 +66,7 @@ CTensor* add_tensor(CTensor* tensor1, CTensor* tensor2){
 // element-wise multiplication
 CTensor* mul_ele_tensor(CTensor* tensor1, CTensor* tensor2){
 
-    float *data = (float*)mallco(tensor1->size * sizeof(float));
+    float *data = (float*)malloc(tensor1->size * sizeof(float));
     // element wise multiplication
     for (int k = 0; k < tensor1->size; k++){
         data[k] = tensor1->data[k] * tensor2->data[k];
