@@ -4,7 +4,7 @@ from Cython.Build import cythonize
 # Define the extension module
 ex = [
     Extension(
-        "CGrad.tensor.Tensorwrapper",
+        "cgrad.tensor.Tensorwrapper",
         sources=['cgrad/tensor/Tensorwrapper.pyx', 'cgrad/tensor/tensor.c'],
         extra_compile_args=['-arch', 'arm64'],
         extra_link_args=['-arch', 'arm64']
