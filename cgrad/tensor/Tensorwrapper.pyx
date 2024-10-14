@@ -192,7 +192,7 @@ cdef class Tensor:
         """
         Helper function for ele wise multiplication.
         """
-        if self.tensor.shape != other.tensor.shape:
+        if self._shape != other._shape:
             raise ValueError("Shapes of the tensors must be the same for multiplication.")
         
         new_mul_tensor = mul_ele_tensor(self.tensor, other.tensor)
@@ -216,7 +216,7 @@ cdef class Tensor:
             raise MemoryError("Failed to allocate memory for scalar multiplication.")
 
         for i in range(self.tensor.size):
-            result_data[i] = self.tensor.data[i] + other
+            result_data[i] = self.tensor.data[i] * other
 
         new_mul_tensor = init_tensor(result_data, self.tensor.shape, self.tensor.dim)
 
