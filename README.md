@@ -32,7 +32,7 @@ Here’s a simple guide to get you started with **CGrad**:
 ### 📥 Importing the module
 
 ```python
-import cgrad as cg
+import cgrad.tensor as cg
 ```
 
 ### 📦 Creating Tensors
@@ -90,6 +90,12 @@ I ❤️ contributions! If you’d like to contribute to **CGrad**, please:
 1. 🍴 Fork the repository.
 2. 🌱 Create a new branch for your feature or bugfix.
 3. ✉️ Submit a pull request.
+
+## 📖 Reading
+
+- Blog about how tensor work at computer level.
+[[link](http://blog.ezyang.com/2019/05/pytorch-internals/)]
+- Cython Documentation. [[link](https://cython.readthedocs.io/en/latest/src/userguide/language_basics.html)]
 
 ## 📝 License
 

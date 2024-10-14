@@ -1,6 +1,5 @@
 from setuptools import setup, Extension, find_packages
 from Cython.Build import cythonize
-import os
 
 # Define the extension module
 ex = [
@@ -18,12 +17,7 @@ setup(
     ext_modules=cythonize(ex),
     license="mit",
     install_requires=["numpy"],
-    package_dir={'CGrad': 'CGrad'},
+    package_dir={'cgrad': 'cgrad'},
     packages=find_packages(where='CGrad'),
-    language_level=3,
-    # options={
-    #     'build_ext': {
-    #         'build_lib': os.path.abspath('CGrad'),  # Define custom output directory
-    #     }
-    # }
+    
 )

@@ -1,1 +1,1 @@
-from cgrad.tensor import Tensor
+from .tensor import Tensor
