@@ -11,8 +11,9 @@ cdef extern from "storage.h":
         int size
     
     CTensor* init_tensor(float *data, int *shape, int dim)
-    CTensor* add_tensor(CTensor* tensro1, CTensor* tensor2)
-
+    CTensor* add_tensor(CTensor* tensor1, CTensor* tensor2)
+    CTensor* mul_ele_tensor(CTensor* tensor1, CTensor* tenosr2)
+    
 cdef class Tensor:
     cdef CTensor* tensor
     cdef list _item
@@ -96,11 +97,10 @@ cdef class Tensor:
             free(c_data)
             free(c_shape)
             raise MemoryError("Failed to initialize tensor")
-
+# add method and also helper function
     def __add__(self, other):
         """
         Function for adding tensors or adding a scalar to a tensor.
-
         """
 
         if isinstance(other, Tensor):
@@ -164,6 +164,71 @@ cdef class Tensor:
         new_shape = tuple(new_add_tensor.shape[i] for i in range(new_add_tensor.dim))
         new_added_data = new_added_data.reshape(new_shape)
         return Tensor(new_added_data)
+
+# mul and helper functions
+    def __mul__(self, other):
+        """
+        Function for multiply tensors or multiply a scalar to a tensor.
+        """
+        if isinstance(other, Tensor):
+            return self._mul_tensor(other)
+        elif isinstance(other, (int, float)):
+            return self._mul_scaler(other)
+        else:
+            raise TypeError(f"Unspported type for multiplication: {type(other)}")
+    
+    def __rmul__(self, other):
+        """
+        Function for reverse mutiply also scalar.
+        """
+        if isinstance(other, Tensor):
+            return self._mul_tensor(other)
+        elif isinstance(other, (int, float)):
+            return self._mul_scaler(other)
+        else:
+            raise TypeError(f"Unspported type for multiplication: {type(other)}")
+
+    cdef _mul_tensor(self, Tensor other):
+        """
+        Helper function for ele wise multiplication.
+        """
+        if self.tensor.shape != other.tensor.shape:
+            raise ValueError("Shapes of the tensors must be the same for multiplication.")
+        
+        new_mul_tensor = mul_ele_tensor(self.tensor, other.tensor)
+
+        if new_mul_tensor == NULL:
+            raise MemoryError("Failed to allocate memory for new_mul_tensor.")
+        
+        new_mul_data = np.array([new_mul_tensor.data[i] for i in range(new_mul_tensor.size)])
+        new_shape = tuple(new_mul_tensor.shape[i] for i in range(new_mul_tensor.dim))
+        new_mul_data = new_mul_data.reshape(new_shape)
+
+        return Tensor(new_mul_data)
+
+    cdef _mul_scaler(self, double other):
+        """
+            Helper function for multiply the and number with tensor.
+        """
+        cdef int i
+        cdef float* result_data = <float*>malloc(self.tensor.size * sizeof(float))
+        if result_data == NULL:
+            raise MemoryError("Failed to allocate memory for scalar multiplication.")
+
+        for i in range(self.tensor.size):
+            result_data[i] = self.tensor.data[i] + other
+
+        new_mul_tensor = init_tensor(result_data, self.tensor.shape, self.tensor.dim)
+
+        if new_mul_tensor == NULL:
+            free(result_data)
+            raise MemoryError("Failed to allocate memory for the result tensor.")
+
+        new_mul_data = np.array([new_mul_tensor.data[i] for i in range(new_mul_tensor.size)])
+        new_shape = tuple(new_mul_tensor.shape[i] for i in range(new_mul_tensor.dim))
+        new_mul_data = new_mul_data.reshape(new_shape)
+        return Tensor(new_mul_data)
+
 
     def __repr__(self):
         return f"Tensor(Data = {self._item}, Shape = {self._shape})"
