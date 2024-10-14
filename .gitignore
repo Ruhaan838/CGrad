@@ -2,3 +2,4 @@
 /cgrad/__pycache__
 /cgrad/tensor/__pycache__
 /cgrad/tensor/Tensorwrapper.c
+.pytest_cache
