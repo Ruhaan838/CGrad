@@ -51,7 +51,7 @@ print(f"\nResult Tensor{f}")
 print(f"Shape of result Tensor:{f.shape}")
 print(f"Dim of Result Tensor:{f.ndim}\n")
 
-print("devision of two tensor")
+print("division of two tensor")
 t1 = cg.Tensor([[1,2,3], [2,3,4]])
 t2 = cg.Tensor([[2,3,4], [3,4,4]])
 r = t1 / t2
@@ -59,7 +59,7 @@ print(f"\nResult Tensor{r}")
 print(f"Shape of result Tensor:{r.shape}")
 print(f"Dim of Result Tensor:{r.ndim}\n")
 
-print("broadcasting rule for devision")
+print("broadcasting rule for division")
 t1 = cg.Tensor([100, 200, 300])
 r = t1 / 100
 print(f"\nResult Tensor{r}")
