@@ -9,9 +9,7 @@ ext_modules = [
             'cgrad/tensor/Tensorwrapper.pyx',  
             'cgrad/tensor/tensor.c'  
         ],
-        include_dirs=[numpy.get_include()], 
-        extra_compile_args=['-arch', 'arm64'],  
-        extra_link_args=['-arch', 'arm64']
+        include_dirs=[numpy.get_include()]
     )
 ]
 
