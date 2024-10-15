@@ -34,7 +34,7 @@ Here’s a simple guide to get you started with **CGrad**:
 ### 📥 Importing the module
 
 ```python
-import cgrad.tensor as cg
+import cgrad as cg
 ```
 
 ### 📦 Creating Tensors
