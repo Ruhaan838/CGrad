@@ -1,4 +1,6 @@
-# 🔥 CGrad
+<p align="center">
+    <image src = "images/logo.png" />
+</p>
 
 ## ✨ Overview
 
@@ -12,8 +14,8 @@ Lightweight and Efficient library for performing tensor operations. **CGrad** is
 
 ## ⚙️ Installation
 
-1. [`install MinGW`](https://gcc.gnu.org/install/binaries.html) for **Windows** user.
-2. [`install gcc`](https://formulae.brew.sh/formula/gcc) for **Mac** or **Linux** user.
+1. [`install MinGW`](https://gcc.gnu.org/install/binaries.html) for **Windows** user install latest MinGW.
+2. [`install gcc`](https://formulae.brew.sh/formula/gcc) for **Mac** or **Linux** user install latest gcc.
 
 3. clone the repository and install manually:
 
@@ -32,7 +34,7 @@ Here’s a simple guide to get you started with **CGrad**:
 ### 📥 Importing the module
 
 ```python
-import cgrad.tensor as cg
+import cgrad as cg
 ```
 
 ### 📦 Creating Tensors
