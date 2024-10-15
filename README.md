@@ -12,18 +12,18 @@ Lightweight and Efficient library for performing tensor operations. **CGrad** is
 
 ## ⚙️ Installation
 
-To install **CGrad**, you can use `pip`:
+1. [`install MinGW`]((https://gcc.gnu.org/install/binaries.html)) for **Windows** user.
+2. [`install gcc`]((https://formulae.brew.sh/formula/gcc)) for **Mac** or **Linux** user.
 
-```bash
-pip install cgrad
-```
+3. clone the repository and install manually:
 
-Or clone the repository and install manually:
-
-```bash
-git clone https://github.com/Ruhaan838/CGrad
-python setup.py install
-```
+    ```bash
+    git clone https://github.com/Ruhaan838/CGrad
+    ```
+    ``` 
+    python setup.py install
+    pip install -e.
+    ``` 
 
 ## 🚀 Getting Started
 
@@ -52,12 +52,12 @@ tensor = cg.Tensor([[1.0, 2.0], [3.0, 4.0]])
 CGrad supports basic operations like addition, multiplication, etc.:
 
 ```python
-# Tensor addition ➕
+# Tensor addition 
 a = cg.Tensor([1.0, 2.0, 3.0])
 b = cg.Tensor([4.0, 5.0, 6.0])
 result = a + b  # Element-wise addition
 
-# Tensor multiplication ✖️
+# Tensor multiplication 
 c = cg.Tensor([[1.0, 2.0], [3.0, 4.0]])
 d = cg.Tensor([[5.0, 6.0], [7.0, 8.0]])
 result = c * d  # Element-wise multiplication
@@ -68,17 +68,17 @@ result = c * d  # Element-wise multiplication
 CGrad automatically tracks operations and computes gradients for backpropagation:
 
 ```python
-# Defining tensors with gradient tracking 🌟
+# Defining tensors with gradient tracking 
 x = cg.Tensor([2.0, 3.0], requires_grad=True)
 y = cg.Tensor([1.0, 4.0], requires_grad=True)
 
-# Performing operations ⚙️
+# Performing operations 
 z = x * y + 2.0
 
-# Backpropagation to compute gradients 🔄
+# Backpropagation to compute gradients 
 z.backward()
 
-# Accessing gradients 📈
+# Accessing gradients 
 print(x.grad)  # Gradients of x
 print(y.grad)  # Gradients of y
 ```
@@ -99,4 +99,4 @@ I ❤️ contributions! If you’d like to contribute to **CGrad**, please:
 
 ## 📝 License
 
-📜 See `LICENSE` for more details.
+📜 See [`LICENSE`](LICENSE) for more details.
