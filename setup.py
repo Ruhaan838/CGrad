@@ -1,22 +1,45 @@
 from setuptools import setup, Extension, find_packages
 from Cython.Build import cythonize
+import numpy
 
-# Define the extension module
-ex = [
+ext_modules = [
     Extension(
-        "cgrad.tensor.Tensorwrapper",
-        sources=['cgrad/tensor/Tensorwrapper.pyx', 'cgrad/tensor/tensor.c'],
-        extra_compile_args=['-arch', 'arm64'],
+        "cgrad.tensor.Tensorwrapper", 
+        sources=[
+            'cgrad/tensor/Tensorwrapper.pyx',  
+            'cgrad/tensor/tensor.c'  
+        ],
+        include_dirs=[numpy.get_include()], 
+        extra_compile_args=['-arch', 'arm64'],  
         extra_link_args=['-arch', 'arm64']
     )
 ]
 
 setup(
-    name="CGrad",
-    version="0.1",
-    ext_modules=cythonize(ex, annotate=True),
-    license="mit",
-    install_requires=["numpy"],
-    package_dir={'cgrad': 'cgrad'},
-    packages=find_packages(where='CGrad'),
+    name="CGrad", 
+    version="0.1", 
+    description="A Cython-based tensor and autograd library",  
+    long_description=open('README.md').read(),  
+    long_description_content_type='text/markdown',  
+    author="Ruhaan",  
+    author_email="ruhaan123dalal@gmail.com", 
+    url="https://github.com/Ruhaan838/CGrad", 
+    classifiers=[  
+        "Programming Language :: Python :: 3",
+        "Programming Language :: C",
+        "Programming Language :: Python :: Implementation :: CPython",
+        "License :: MIT License",
+        "Operating System :: OS Independent",
+        "Development Status :: 3 - Alpha",  
+        "Intended Audience :: Developers",
+        "Topic :: Software Development :: Libraries",
+        "Topic :: Scientific/Engineering :: Artificial Intelligence"
+    ],
+    ext_modules=cythonize(ext_modules, annotate=True),  
+    license="MIT",  
+    install_requires=["numpy"], 
+    package_dir={'': '.'},  
+    packages=find_packages(), 
+    include_package_data=True,  
+    zip_safe=False  
 )
