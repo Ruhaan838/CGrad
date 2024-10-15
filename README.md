@@ -12,8 +12,8 @@ Lightweight and Efficient library for performing tensor operations. **CGrad** is
 
 ## ⚙️ Installation
 
-1. [`install MinGW`]((https://gcc.gnu.org/install/binaries.html)) for **Windows** user.
-2. [`install gcc`]((https://formulae.brew.sh/formula/gcc)) for **Mac** or **Linux** user.
+1. [`install MinGW`](https://gcc.gnu.org/install/binaries.html) for **Windows** user.
+2. [`install gcc`](https://formulae.brew.sh/formula/gcc) for **Mac** or **Linux** user.
 
 3. clone the repository and install manually:
 
