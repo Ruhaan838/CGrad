@@ -206,11 +206,11 @@ cdef class Tensor:
 
         elif isinstance(other, (int, float)):
             if other == 0:
-                raise ArithmeticError("You can't devide the tensor with '0' ")
+                raise ArithmeticError("You can't divide the tensor with '0' ")
             return self._mul_scaler(other ** -1)
             
         else:
-            raise TypeError(f"Unspported type for devision: {type(other)}")
+            raise TypeError(f"Unspported type for division: {type(other)}")
 
     cdef _add_tensor(self, Tensor other):
         """
