@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "storage.h"
+#include <math.h>
 
 #define len(arr) (sizeof(arr) / sizeof(arr[0]))
 
@@ -74,6 +75,26 @@ CTensor* mul_ele_tensor(CTensor* tensor1, CTensor* tensor2){
 
     CTensor* mul_tensor = init_tensor(data, tensor1->shape, tensor1->dim);
     return mul_tensor;
+}
+
+CTensor* pow_tensor(CTensor* tensor1, float num){
+
+    float *data = (float*)malloc(tensor1->size * sizeof(float));
+    for (int k = 0; k < tensor1->size; k++){
+        data[k] = pow(tensor1->data[k], num);
+    }
+    CTensor* pow_ans_tensor = init_tensor(data, tensor1->shape, tensor1->dim);
+    return pow_ans_tensor;
+}
+
+CTensor* pow_two_tensor(CTensor* tensor1, CTensor* tenosr2){
+    float *data = (float*)malloc(tensor1->size * sizeof(float));
+    
+    for (int k = 0; k < tensor1->size; k++){
+        data[k] = pow(tensor1->data[k],tenosr2->data[k]);
+    }
+    CTensor* ans_pow_tensor = init_tensor(data, tensor1->shape, tensor1->dim);
+    return ans_pow_tensor;
 }
 
 void display_tensor(CTensor *tensor){

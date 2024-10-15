@@ -13,21 +13,22 @@ cdef extern from "storage.h":
     CTensor* init_tensor(float *data, int *shape, int dim)
     CTensor* add_tensor(CTensor* tensor1, CTensor* tensor2)
     CTensor* mul_ele_tensor(CTensor* tensor1, CTensor* tenosr2)
-    
+    CTensor* pow_tensor(CTensor* tensor1, float num)
+    CTensor* pow_two_tensor(CTensor* tensor1, CTensor* tensor2)
 cdef class Tensor:
     cdef CTensor* tensor
     cdef list _item
     cdef tuple _shape
     cdef int _ndim
-
-    def __init__(self, data: list| tuple| np.array| int| float):
+    cdef set _prev
+    def __init__(self, data: list| tuple| np.array| int| float, _prev=()):
         """
             Function that initalize the tensor using list, tuple, np.array, int or float
         """
         try:
             if isinstance(data, (int, float)):#check the instance is int or float so it's convert it to list
                 arr = np.array([data])  
-                arr_shape = ()  
+                arr_shape = arr.shape  
             else:
                 # TODO: chage this from numpy array to our own array for much faster then the numpy (try to hard 🤞)
                 arr = np.array(data)  #convert to the np array for now later it will chage
@@ -43,7 +44,8 @@ cdef class Tensor:
 
         self.__convert_and_init(data_list, arr_shape) 
 
-        #some acceable attributes 
+        #some acceable attributes
+        self._prev = set(_prev) 
         self._item = arr.tolist()  
         self._shape = arr_shape
         self._ndim = dim
@@ -97,6 +99,7 @@ cdef class Tensor:
             free(c_data)
             free(c_shape)
             raise MemoryError("Failed to initialize tensor")
+
 # add method and also helper function
     def __add__(self, other):
         """
@@ -121,49 +124,29 @@ cdef class Tensor:
         else:
             raise TypeError(f"Unspported type for additation: {type(other)}")
 
-    cdef _add_tensor(self, Tensor other):
+#sub method and also helper funtion
+    def __sub__(self, other):
         """
-        Helper function to add two tensors. Requires both tensors to have the same shape.
+            Function for subtracting tensor or scalar to a tensor.
         """
-
-        if self._shape != other._shape:
-            raise ValueError("Shapes of the tensors must be the same for addition.")
-
-       
-        new_add_tensor = add_tensor(self.tensor, other.tensor)
-
-        if new_add_tensor is NULL:
-            raise MemoryError("Failed to allocate memory for the result tensor.")
-
-        
-        new_added_data = np.array([new_add_tensor.data[i] for i in range(new_add_tensor.size)])
-        new_shape = tuple(new_add_tensor.shape[i] for i in range(new_add_tensor.dim))
-        new_added_data = new_added_data.reshape(new_shape)
-        return Tensor(new_added_data)
-
-    cdef _add_scalar(self, double scalar):
-        """
-        Helper function to add a scalar to a tensor, broadcasting the scalar across the tensor.
-        """
-
-        cdef int i
-        cdef float* result_data = <float*>malloc(self.tensor.size * sizeof(float))
-        if result_data == NULL:
-            raise MemoryError("Failed to allocate memory for scalar addition.")
-
-        for i in range(self.tensor.size):
-            result_data[i] = self.tensor.data[i] + scalar
-
-        new_add_tensor = init_tensor(result_data, self.tensor.shape, self.tensor.dim)
-
-        if new_add_tensor == NULL:
-            free(result_data)
-            raise MemoryError("Failed to allocate memory for the result tensor.")
-
-        new_added_data = np.array([new_add_tensor.data[i] for i in range(new_add_tensor.size)])
-        new_shape = tuple(new_add_tensor.shape[i] for i in range(new_add_tensor.dim))
-        new_added_data = new_added_data.reshape(new_shape)
-        return Tensor(new_added_data)
+        if isinstance(other, Tensor):
+            new_other = other * -1
+            return self._add_tensor(new_other)
+        elif isinstance(other, (int, float)):
+            new_other = other * -1
+            return self._add_scalar(new_other)
+        else:
+            raise TypeError(f"Unspported type for subtraction: {type(other)}")
+    
+    def __rsub__(self, other):
+        if isinstance(other, Tensor):
+            new_other = other * -1
+            return self._add_tensor(new_other)
+        elif isinstance(other, (int, float)):
+            new_other = other * -1
+            return self._add_scalar(new_other)
+        else:
+            raise TypeError(f"Unspported type for subtraction: {type(other)}")
 
 # mul and helper functions
     def __mul__(self, other):
@@ -188,6 +171,89 @@ cdef class Tensor:
         else:
             raise TypeError(f"Unspported type for multiplication: {type(other)}")
 
+    def __pow__(self, other):
+        """
+            Function for do the power of any tenor
+        """
+        if isinstance(other, Tensor):
+            return self._pow_tensor(other)
+        elif isinstance(other, (int, float)):
+            return self._pow_scaler(other)
+        else:
+            raise TypeError(f"Unspported type for power: {type(other)}")
+    
+    def __truediv__(self, other):
+        """
+            Function for devide the two tensor and scaler
+        """
+        if isinstance(other, Tensor):
+            return self._mul_tensor(other ** -1)
+
+        elif isinstance(other, (int, float)):
+            if other == 0:
+                raise ArithmeticError("You can't devide the tensor with '0' ")
+            return self._mul_scaler(other ** -1)
+
+        else:
+            raise TypeError(f"Unspported type for devision: {type(other)}")
+    
+    def __rtruediv__(self, other):
+        """
+            Function for devide the two tensor and scaler
+        """
+        if isinstance(other, Tensor):
+            return self._mul_tensor(other ** -1)
+
+        elif isinstance(other, (int, float)):
+            if other == 0:
+                raise ArithmeticError("You can't devide the tensor with '0' ")
+            return self._mul_scaler(other ** -1)
+            
+        else:
+            raise TypeError(f"Unspported type for devision: {type(other)}")
+
+    cdef _add_tensor(self, Tensor other):
+        """
+        Helper function to add two tensors. Requires both tensors to have the same shape.
+        """
+
+        if self._shape != other._shape:
+            raise ValueError("Shapes of the tensors must be the same for addition.")
+
+       
+        new_add_tensor = add_tensor(self.tensor, other.tensor)
+
+        if new_add_tensor is NULL:
+            raise MemoryError("Failed to allocate memory for the result tensor.")
+
+        new_added_data = np.array([new_add_tensor.data[i] for i in range(new_add_tensor.size)])
+        new_shape = tuple(new_add_tensor.shape[i] for i in range(new_add_tensor.dim))
+        new_added_data = new_added_data.reshape(new_shape)
+        return Tensor(new_added_data, (self, other))
+
+    cdef _add_scalar(self, double scalar):
+        """
+        Helper function to add a scalar to a tensor, broadcasting the scalar across the tensor.
+        """
+
+        cdef float* result_data = <float*>malloc(self.tensor.size * sizeof(float))
+        if result_data == NULL:
+            raise MemoryError("Failed to allocate memory for scalar addition.")
+
+        for i in range(self.tensor.size):
+            result_data[i] = self.tensor.data[i] + scalar
+
+        new_add_tensor = init_tensor(result_data, self.tensor.shape, self.tensor.dim)
+
+        if new_add_tensor == NULL:
+            free(result_data)
+            raise MemoryError("Failed to allocate memory for the result tensor.")
+
+        new_added_data = np.array([new_add_tensor.data[i] for i in range(new_add_tensor.size)])
+        new_shape = tuple(new_add_tensor.shape[i] for i in range(new_add_tensor.dim))
+        new_added_data = new_added_data.reshape(new_shape)
+        return Tensor(new_added_data, (self, scalar))
+
     cdef _mul_tensor(self, Tensor other):
         """
         Helper function for ele wise multiplication.
@@ -204,19 +270,19 @@ cdef class Tensor:
         new_shape = tuple(new_mul_tensor.shape[i] for i in range(new_mul_tensor.dim))
         new_mul_data = new_mul_data.reshape(new_shape)
 
-        return Tensor(new_mul_data)
+        return Tensor(new_mul_data, (self, other))
 
-    cdef _mul_scaler(self, double other):
+    cdef _mul_scaler(self, double scalar):
         """
             Helper function for multiply the and number with tensor.
         """
-        cdef int i
+
         cdef float* result_data = <float*>malloc(self.tensor.size * sizeof(float))
         if result_data == NULL:
             raise MemoryError("Failed to allocate memory for scalar multiplication.")
 
         for i in range(self.tensor.size):
-            result_data[i] = self.tensor.data[i] * other
+            result_data[i] = self.tensor.data[i] * scalar
 
         new_mul_tensor = init_tensor(result_data, self.tensor.shape, self.tensor.dim)
 
@@ -227,8 +293,41 @@ cdef class Tensor:
         new_mul_data = np.array([new_mul_tensor.data[i] for i in range(new_mul_tensor.size)])
         new_shape = tuple(new_mul_tensor.shape[i] for i in range(new_mul_tensor.dim))
         new_mul_data = new_mul_data.reshape(new_shape)
-        return Tensor(new_mul_data)
 
+        return Tensor(new_mul_data, (self, scalar))
+
+    cdef _pow_tensor(self, Tensor other):
+        """
+            Helper function for get the power with other tensor.
+        """
+        if self.tensor.shape != other.tensor.shape:
+            raise ValueError("Shapes of the tensors must be the same for multiplication.")
+        
+        two_pow_tensor = pow_two_tensor(self.tensor, other.tensor)
+
+        if two_pow_tensor == NULL:
+            raise MemoryError("Failes to allocate the memory for new tensor for pow")
+        
+        two_pow_data = np.array([two_pow_tensor.data[i] for i in range(two_pow_tensor.size)])
+        new_shape = tuple(two_pow_data.shape[i] for i in range(two_pow_data.dim))
+        two_pow_data = two_pow_data.reshape(new_shape)
+
+        return Tensor(two_pow_data, (self, other))
+
+    cdef _pow_scaler(self, float num):
+        """
+            Helper function for power with num
+        """
+        new_pow_tensor = pow_tensor(self.tensor, num)
+
+        if new_pow_tensor == NULL:
+            raise MemoryError("Failed to allocate the memory for the pow tensor.")
+        
+        new_pow_data = np.array([new_pow_tensor.data[i] for i in range(new_pow_tensor.size)])
+        new_shape = tuple(new_pow_tensor.shape[i] for i in range(new_pow_tensor.dim))
+        new_pow_data = new_pow_data.reshape(new_shape)
+
+        return Tensor(new_pow_data, (self, num))
 
     def __repr__(self):
         return f"Tensor(Data = {self._item}, Shape = {self._shape})"
