@@ -300,7 +300,7 @@ cdef class Tensor:
         """
             Helper function for get the power with other tensor.
         """
-        if self.tensor.shape != other.tensor.shape:
+        if self._shape != other._shape:
             raise ValueError("Shapes of the tensors must be the same for multiplication.")
         
         two_pow_tensor = pow_two_tensor(self.tensor, other.tensor)
@@ -309,7 +309,7 @@ cdef class Tensor:
             raise MemoryError("Failes to allocate the memory for new tensor for pow")
         
         two_pow_data = np.array([two_pow_tensor.data[i] for i in range(two_pow_tensor.size)])
-        new_shape = tuple(two_pow_data.shape[i] for i in range(two_pow_data.dim))
+        new_shape = tuple(two_pow_data.shape[i] for i in range(two_pow_tensor.dim))
         two_pow_data = two_pow_data.reshape(new_shape)
 
         return Tensor(two_pow_data, (self, other))
