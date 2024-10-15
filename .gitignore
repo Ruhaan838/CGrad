@@ -3,4 +3,5 @@
 /cgrad/tensor/__pycache__
 /cgrad/tensor/Tensorwrapper.c
 /cgrad/tensor/Tensorwrapper.html
+/CGrad.egg-info
 .pytest_cache
