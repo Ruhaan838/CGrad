@@ -6,3 +6,4 @@
 /CGrad.egg-info
 /.vscode
 .pytest_cache
+./example/temp.py
