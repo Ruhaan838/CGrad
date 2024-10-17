@@ -10,6 +10,8 @@ typedef struct{
 } CTensor;
 
 void cal_stride(CTensor *tensor);
+void broadcast_stride(CTensor* tensor1, CTensor* tensor2, int* r_stride1, int* r_stride2, int max_dim);
+int broadcast_shape(CTensor* tensor1, CTensor* tensor2, int *ans);
 CTensor* init_tensor(float *data, int *shape, int dim);
 void display_tensor(CTensor *tensor);
 CTensor* add_tensor(CTensor* tensor1, CTensor* tensor2);
