@@ -18,6 +18,11 @@ c = a + b
 print(f"\nresult Tensor:{c}")
 print(f"Shape of result Tensor:{c.shape}")
 print(f"Dim of result Tensor:{c.ndim}\n")
+print("add using .add")
+c = a.add(b)
+print(f"\nresult Tensor:{c}")
+print(f"Shape of result Tensor:{c.shape}")
+print(f"Dim of result Tensor:{c.ndim}\n")
 
 print("broadcasting rule for addition")
 d = cgrad.Tensor([[1,2,3],[3,4,5]])
