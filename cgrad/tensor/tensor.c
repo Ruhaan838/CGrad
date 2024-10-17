@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "storage/storage.h"
+#include "../storage/storage.h"
 #include <math.h>
 
 #define len(arr) (sizeof(arr) / sizeof(arr[0]))
@@ -242,6 +242,20 @@ void display_tensor(CTensor *tensor){
     printf("), Dim = %d ]\n", tensor->dim);
 }
 
-// int main(){
+int main(){
+   float data1[] = {1.0, 2.0, 3.0};
+   float data2[] = {1.0};
 
-// }
+   int shape1[] = {1,3};
+   int shape2[] = {1};
+   
+   int dim1 = 1;
+   int dim2 = 1;
+
+    CTensor* tensor1 = init_tensor(data1, shape1, dim1);
+    CTensor* tensor2 = init_tensor(data2, shape2, dim2);
+
+    CTensor* result = add_tensor(tensor1, tensor2);
+
+    display_tensor(result);
+}

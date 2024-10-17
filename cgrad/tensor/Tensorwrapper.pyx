@@ -2,7 +2,7 @@
 from libc.stdlib cimport malloc, free
 import numpy as np
 
-cdef extern from "storage/storage.h":
+cdef extern from "../storage/storage.h":
     ctypedef struct CTensor:
         float *data
         int *shape
