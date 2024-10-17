@@ -13,14 +13,12 @@ void cal_stride(CTensor* tensor){
     }
 }
 //caculate the stride for broadcast
-void broadcast_stride(CTensor* tensor1, CTensor* tensor2, int* r_stride1, int* r_stride2, int max_dim){
+void broadcast_stride(CTensor* tensor1, int* r_stride1, int max_dim){
     for (int i = 0; i<max_dim; i++){
         //basicly we are access the last dim of both tensor shape & stride and check if it's 1 or not and update the result stride so that help to get new stride.
         int dim_a = (i >= tensor1->dim) ? 1: tensor1->shape[tensor1->dim - 1 - i];
-        int dim_b = (i >= tensor2->dim) ? 1: tensor2->shape[tensor2->dim - 1 - i];
         // now we are change the result stride if the dim is 1 so we make the stride to 0 and if it's anything else we make it 1.
         r_stride1[max_dim - 1 - i] = (dim_a == 1) ? 0 : tensor1->stride[tensor1->dim - 1 - i];
-        r_stride2[max_dim - 1 - i] = (dim_b == 1) ? 0 : tensor2->stride[tensor2->dim - 1 - i];
     }
 }
 
@@ -96,7 +94,8 @@ CTensor* add_tensor(CTensor* tensor1, CTensor* tensor2) {
 
     int* result_stride1 = (int*)malloc(ndim_result * sizeof(int));
     int* result_stride2 = (int*)malloc(ndim_result * sizeof(int));
-    broadcast_stride(tensor1, tensor2, result_stride1, result_stride2, ndim_result);//caculate the strides
+    broadcast_stride(tensor1, result_stride1, ndim_result);//caculate the strides
+    broadcast_stride(tensor2, result_stride2, ndim_result);
 
     //same loop exits in add_tensor
     int total_elements = 1;
@@ -134,7 +133,7 @@ CTensor* mul_ele_tensor(CTensor* tensor1, CTensor* tensor2) {
 
     int ndim_result = broadcast_shape(tensor1, tensor2, NULL);
     if (ndim_result == -1) {
-        
+
         return NULL;
     }
 
@@ -143,8 +142,9 @@ CTensor* mul_ele_tensor(CTensor* tensor1, CTensor* tensor2) {
 
     int* result_stride1 = (int*)malloc(ndim_result * sizeof(int));
     int* result_stride2 = (int*)malloc(ndim_result * sizeof(int));
-    broadcast_stride(tensor1, tensor2, result_stride1, result_stride2, ndim_result);
-
+    broadcast_stride(tensor1, result_stride1, ndim_result);
+    broadcast_stride(tensor2, result_stride2, ndim_result);
+    
     int total_elements = 1;
     for (int i = 0; i < ndim_result; i++) {
         total_elements *= result_shape[i];
@@ -197,7 +197,8 @@ CTensor* pow_two_tensor(CTensor* tensor1, CTensor* tensor2) {
 
     int* result_stride1 = (int*)malloc(ndim_result * sizeof(int));
     int* result_stride2 = (int*)malloc(ndim_result * sizeof(int));
-    broadcast_stride(tensor1, tensor2, result_stride1, result_stride2, ndim_result);
+    broadcast_stride(tensor1, result_stride1, ndim_result);
+    broadcast_stride(tensor2, result_stride2, ndim_result);
 
     int total_elements = 1;
     for (int i = 0; i < ndim_result; i++) {
