@@ -10,11 +10,13 @@ cdef extern from "storage/storage.h":
         int dim
         int size
     
+    int broadcast_shape(CTensor* tensor1, CTensor* tensor2, int *ans)
     CTensor* init_tensor(float *data, int *shape, int dim)
     CTensor* add_tensor(CTensor* tensor1, CTensor* tensor2)
     CTensor* mul_ele_tensor(CTensor* tensor1, CTensor* tenosr2)
     CTensor* pow_tensor(CTensor* tensor1, float num)
     CTensor* pow_two_tensor(CTensor* tensor1, CTensor* tensor2)
+
 cdef class Tensor:
     cdef CTensor* tensor
     cdef list _item
@@ -216,11 +218,12 @@ cdef class Tensor:
         """
         Helper function to add two tensors. Requires both tensors to have the same shape.
         """
+        cdef int* ans = <int*>malloc(sizeof(int));
+        cdef int allow = broadcast_shape(self.tensor, other.tensor, ans)
 
-        if self._shape != other._shape:
-            raise ValueError("Shapes of the tensors must be the same for addition.")
+        if allow == -1:
+            raise ValueError(f"Shapes of the tensors must be but we found {self._shape} and {other._shape}")
 
-       
         new_add_tensor = add_tensor(self.tensor, other.tensor)
 
         if new_add_tensor is NULL:
@@ -258,8 +261,11 @@ cdef class Tensor:
         """
         Helper function for ele wise multiplication.
         """
-        if self._shape != other._shape:
-            raise ValueError("Shapes of the tensors must be the same for multiplication.")
+        cdef int* ans = <int*>malloc(sizeof(int));
+        cdef int allow = broadcast_shape(self.tensor, other.tensor, ans)
+
+        if allow == -1:
+            raise ValueError(f"Shapes of the tensors must be but we found {self._shape} and {other._shape}")
         
         new_mul_tensor = mul_ele_tensor(self.tensor, other.tensor)
 
@@ -300,8 +306,11 @@ cdef class Tensor:
         """
             Helper function for get the power with other tensor.
         """
-        if self._shape != other._shape:
-            raise ValueError("Shapes of the tensors must be the same for multiplication.")
+        cdef int* ans = <int*>malloc(sizeof(int));
+        cdef int allow = broadcast_shape(self.tensor, other.tensor, ans)
+
+        if allow == -1:
+            raise ValueError(f"Shapes of the tensors must be but we found {self._shape} and {other._shape}")
         
         two_pow_tensor = pow_two_tensor(self.tensor, other.tensor)
 
