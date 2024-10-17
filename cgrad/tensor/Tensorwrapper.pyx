@@ -14,9 +14,9 @@ cdef extern from "storage/storage.h":
     CTensor* init_tensor(float *data, int *shape, int dim)
     CTensor* add_tensor(CTensor* tensor1, CTensor* tensor2)
     CTensor* mul_ele_tensor(CTensor* tensor1, CTensor* tenosr2)
-    CTensor* pow_tensor(CTensor* tensor1, float num)
     CTensor* pow_two_tensor(CTensor* tensor1, CTensor* tensor2)
-
+    CTensor* pow_tensor(CTensor* tensor1, float num)
+    
 cdef class Tensor:
     cdef CTensor* tensor
     cdef list _item
@@ -64,6 +64,20 @@ cdef class Tensor:
     def ndim(self):
         return self._ndim
     
+    def add(self,other):
+        return self + other
+    
+    def sub(self, other):
+        return self - other
+    
+    def mul(self, other):
+        return self * other
+
+    def pow(self, other):
+        return self ** other
+    
+    def div(self, other):
+        return self / other
 
     cdef void __convert_and_init(self, data_list: list, arr_shape: tuple):
         """
@@ -318,7 +332,7 @@ cdef class Tensor:
             raise MemoryError("Failes to allocate the memory for new tensor for pow")
         
         two_pow_data = np.array([two_pow_tensor.data[i] for i in range(two_pow_tensor.size)])
-        new_shape = tuple(two_pow_data.shape[i] for i in range(two_pow_tensor.dim))
+        new_shape = tuple(two_pow_tensor.shape[i] for i in range(two_pow_tensor.dim))
         two_pow_data = two_pow_data.reshape(new_shape)
 
         return Tensor(two_pow_data, (self, other))
