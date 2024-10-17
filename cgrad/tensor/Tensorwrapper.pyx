@@ -116,6 +116,12 @@ cdef class Tensor:
             free(c_shape)
             raise MemoryError("Failed to initialize tensor")
 
+    def __getitem__(self, indx):
+        if isinstance(indx, (int, slice, tuple)):
+            return self._slice_data(np.array(self._item), indx)
+        else:
+            raise TypeError(f"Unsupported index type: {type(indx)}")
+
 # add method and also helper function
     def __add__(self, other):
         """
@@ -227,6 +233,9 @@ cdef class Tensor:
             
         else:
             raise TypeError(f"Unspported type for division: {type(other)}")
+
+    def _slice_data(self, data, indx):
+        return Tensor(data[indx])
 
     cdef _add_tensor(self, Tensor other):
         """
