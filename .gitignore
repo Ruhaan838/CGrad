@@ -4,4 +4,5 @@
 /cgrad/tensor/Tensorwrapper.c
 /cgrad/tensor/Tensorwrapper.html
 /CGrad.egg-info
+/.vscode
 .pytest_cache
