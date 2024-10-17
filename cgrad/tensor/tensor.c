@@ -189,7 +189,6 @@ CTensor* pow_two_tensor(CTensor* tensor1, CTensor* tensor2) {
 
     int ndim_result = broadcast_shape(tensor1, tensor2, NULL);
     if (ndim_result == -1) {
-        printf("Shapes are not compatible for broadcasting\n");
         return NULL;
     }
 
@@ -243,21 +242,5 @@ void display_tensor(CTensor *tensor){
 }
 
 // int main(){
-  
-//    float data1[] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0};
-//    float data2[] = {10.0, 20.0};
-
-//    int shape1[] = {2, 2, 3};
-//    int shape2[] = {1, 2, 1};
-   
-//    int dim1 = 3;
-//    int dim2 = 3;
-
-//     CTensor* tensor1 = init_tensor(data1, shape1, dim1);
-//     CTensor* tensor2 = init_tensor(data2, shape2, dim2);
-
-//     CTensor* result = pow_two_tensor(tensor1, tensor2);
-
-//     display_tensor(result);
 
 // }
