@@ -18,6 +18,44 @@ cdef extern from "../storage/storage.h":
     CTensor* pow_tensor(CTensor* tensor1, float num)
     
 cdef class Tensor:
+    """
+        Class to repesent a Tensor.
+
+        Attributes
+        ----------
+        data : list | tuple | np.array | int | float
+            Any Iterable 
+
+        Methods
+        ----------
+        item:
+            return the item of the tensor in list from.
+        shape:
+            return the shape of the tensor in tuple from.
+        ndim:
+            return the dim of the tensor in int from.
+
+        add(other):
+            other: Tensor | int | float
+            add the Tensor or number.
+
+        sub(other):
+            other: Tensor | int | float
+            sub the Tensor or number.
+
+        mul(other):
+            other: Tensor | int | float
+            mul the Tensor or number.
+
+        div(other):
+            other: Tensor | int | float
+            div the Tensor or number.
+
+        pow(other):
+            other: Tensor | int | float
+            pow the Tensor or number.
+        
+    """
     cdef CTensor* tensor
     cdef list _item
     cdef tuple _shape
@@ -26,6 +64,10 @@ cdef class Tensor:
     def __init__(self, data: list| tuple| np.array| int| float, _prev=()):
         """
             Function that initalize the tensor using list, tuple, np.array, int or float
+            Attributes
+            ----------
+            data : list | tuple | np.array | int | float
+                Any Iterable 
         """
         try:
             if isinstance(data, (int, float)):#check the instance is int or float so it's convert it to list
