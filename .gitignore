@@ -7,3 +7,4 @@
 /.vscode
 .pytest_cache
 /examples/temp.py
+/.idea
