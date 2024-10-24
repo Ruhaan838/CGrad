@@ -1,4 +1,4 @@
-## for now this is to depend on numpy but I try my hard to avoid this (🤞)
+## for now this is depend on numpy but I try my hard to avoid this (🤞)
 from libc.stdlib cimport malloc, free
 import numpy as np
 
@@ -10,13 +10,15 @@ cdef extern from "../storage/Float_tensor.h":
         int dim
         int size
         
-cdef extern from "../storage/methods.h":    
+cdef extern from "../storage/methods.h":
     int broadcast_shape(FloatTensor* tensor1, FloatTensor* tensor2, int *ans)
+    int matmul_broadcast_shape(int dim1, int dim2, int* shape1, int* shape2, int* shape3, int max_dim);
     FloatTensor* init_tensor(float *data, int *shape, int dim)
     FloatTensor* add_tensor(FloatTensor* tensor1, FloatTensor* tensor2)
     FloatTensor* mul_ele_tensor(FloatTensor* tensor1, FloatTensor* tenosr2)
     FloatTensor* pow_two_tensor(FloatTensor* tensor1, FloatTensor* tensor2)
     FloatTensor* pow_tensor(FloatTensor* tensor1, float num)
+    FloatTensor* matmulNd(FloatTensor* tensor1, FloatTensor* tensor2)
 
 cdef class Tensor:
     """
@@ -277,6 +279,15 @@ cdef class Tensor:
         else:
             raise TypeError(f"Unspported type for division: {type(other)}")
 
+    def __matmul__(self, other):
+        """
+            Function for mutiply the N dim matrix
+        """
+        if isinstance(other, Tensor):
+            return self._matmul(other)
+        else:
+            raise TypeError(f"Unspport type for matrix multiplication {type(other)}")
+
     def _slice_data(self, data, indx):
         return Tensor(data[indx])
 
@@ -403,6 +414,24 @@ cdef class Tensor:
         new_pow_data = new_pow_data.reshape(new_shape)
 
         return Tensor(new_pow_data, (self, num))
+
+    cdef _matmul(self, Tensor other):
+        cdef int max_dim = self.tensor.dim if self.tensor.dim > other.tensor.dim else other.tensor.dim 
+        cdef int valid = matmul_broadcast_shape(self.tensor.dim, other.tensor.dim, self.tensor.shape, other.tensor.shape, other.tensor.shape, max_dim)
+
+        if valid == -1:
+            raise ValueError(f"Can't multiply the matrix shape: {self._shape} and {other._shape}")
+
+        new_matmul_tensor = matmulNd(self.tensor, other.tensor)
+        
+        if new_matmul_tensor == NULL:
+            raise MemoryError("Failed to allocate the memory for the matmul tensor.")
+
+        new_matmul_data = np.array([new_matmul_tensor.data[i] for i in range(new_matmul_tensor.size)])
+        new_shape = tuple(new_matmul_tensor.shape[i] for i in range(new_matmul_tensor.dim))
+        new_matmul_data = new_matmul_data.reshape(new_shape)
+
+        return Tensor(new_matmul_data, (self, other))
 
     def __repr__(self):
         return f"Tensor(Data = {self._item}, Shape = {self._shape})"
