@@ -309,7 +309,7 @@ cdef class Tensor:
         new_added_data = np.array([new_add_tensor.data[i] for i in range(new_add_tensor.size)])
         new_shape = tuple(new_add_tensor.shape[i] for i in range(new_add_tensor.dim))
         new_added_data = new_added_data.reshape(new_shape)
-        return Tensor(new_added_data, (self, other))
+        return Tensor(new_added_data, _prev=(self, other))
 
     cdef _add_scalar(self, double scalar):
         """
@@ -332,7 +332,7 @@ cdef class Tensor:
         new_added_data = np.array([new_add_tensor.data[i] for i in range(new_add_tensor.size)])
         new_shape = tuple(new_add_tensor.shape[i] for i in range(new_add_tensor.dim))
         new_added_data = new_added_data.reshape(new_shape)
-        return Tensor(new_added_data, (self, scalar))
+        return Tensor(new_added_data, _prev=(self, scalar))
 
     cdef _mul_tensor(self, Tensor other):
         """
@@ -353,7 +353,7 @@ cdef class Tensor:
         new_shape = tuple(new_mul_tensor.shape[i] for i in range(new_mul_tensor.dim))
         new_mul_data = new_mul_data.reshape(new_shape)
 
-        return Tensor(new_mul_data, (self, other))
+        return Tensor(new_mul_data, _prev=(self, other))
 
     cdef _mul_scaler(self, double scalar):
         """
@@ -377,7 +377,7 @@ cdef class Tensor:
         new_shape = tuple(new_mul_tensor.shape[i] for i in range(new_mul_tensor.dim))
         new_mul_data = new_mul_data.reshape(new_shape)
 
-        return Tensor(new_mul_data, (self, scalar))
+        return Tensor(new_mul_data, _prev=(self, scalar))
 
     cdef _pow_tensor(self, Tensor other):
         """
@@ -398,7 +398,7 @@ cdef class Tensor:
         new_shape = tuple(two_pow_tensor.shape[i] for i in range(two_pow_tensor.dim))
         two_pow_data = two_pow_data.reshape(new_shape)
 
-        return Tensor(two_pow_data, (self, other))
+        return Tensor(two_pow_data, _prev=(self, other))
 
     cdef _pow_scaler(self, float num):
         """
@@ -413,7 +413,7 @@ cdef class Tensor:
         new_shape = tuple(new_pow_tensor.shape[i] for i in range(new_pow_tensor.dim))
         new_pow_data = new_pow_data.reshape(new_shape)
 
-        return Tensor(new_pow_data, (self, num))
+        return Tensor(new_pow_data, _prev=(self, num))
 
     cdef _matmul(self, Tensor other):
         cdef int max_dim = self.tensor.dim if self.tensor.dim > other.tensor.dim else other.tensor.dim 
@@ -431,7 +431,7 @@ cdef class Tensor:
         new_shape = tuple(new_matmul_tensor.shape[i] for i in range(new_matmul_tensor.dim))
         new_matmul_data = new_matmul_data.reshape(new_shape)
 
-        return Tensor(new_matmul_data, (self, other))
+        return Tensor(new_matmul_data, _prev=(self, other))
 
     def __repr__(self):
         return f"Tensor(Data = {self._item}, Shape = {self._shape})"
