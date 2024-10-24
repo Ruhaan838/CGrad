@@ -1,11 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "../storage/storage.h"
 #include <math.h>
+#include "../storage/Float_tensor.h"
+#include "../storage/methods.h"
 
 #define len(arr) (sizeof(arr) / sizeof(arr[0]))
 
-void cal_stride(CTensor* tensor){
+void cal_stride(FloatTensor* tensor){
     tensor->stride = calloc(tensor->dim, sizeof(int)); //allocate the size for stride
     tensor->stride[tensor->dim - 1] = 1; // the last dim is always 1
     for (int i = tensor->dim - 2; i >= 0; i--){
@@ -13,7 +14,7 @@ void cal_stride(CTensor* tensor){
     }
 }
 //caculate the stride for broadcast
-void broadcast_stride(CTensor* tensor1, int* r_stride1, int max_dim){
+void broadcast_stride(FloatTensor* tensor1, int* r_stride1, int max_dim){
     for (int i = 0; i<max_dim; i++){
         //basicly we are access the last dim of both tensor shape & stride and check if it's 1 or not and update the result stride so that help to get new stride.
         int dim_a = (i >= tensor1->dim) ? 1: tensor1->shape[tensor1->dim - 1 - i];
@@ -22,7 +23,7 @@ void broadcast_stride(CTensor* tensor1, int* r_stride1, int max_dim){
     }
 }
 
-int broadcast_shape(CTensor* tensor1, CTensor* tensor2, int *ans) {
+int broadcast_shape(FloatTensor* tensor1, FloatTensor* tensor2, int *ans) {
     // get the max of the both dims
     int max_dim = (tensor1->dim > tensor2->dim) ? tensor1->dim : tensor2->dim;
     int dima = tensor1->dim;
@@ -45,10 +46,10 @@ int broadcast_shape(CTensor* tensor1, CTensor* tensor2, int *ans) {
 }
 
 // tensor initialization
-CTensor* init_tensor(float *data, int *shape, int ndim){
-    CTensor* newtensor = (CTensor*)malloc(sizeof(CTensor)); // allocate memory for tensor struct
+FloatTensor* init_tensor(float *data, int *shape, int ndim){
+    FloatTensor* newtensor = (FloatTensor*)malloc(sizeof(FloatTensor)); // allocate memory for tensor struct
     if (newtensor == NULL){
-        perror("Failed to allocate memory for CTensor");
+        perror("Failed to allocate memory for FloatTensor");
         return NULL;
     }
 
@@ -81,7 +82,7 @@ CTensor* init_tensor(float *data, int *shape, int ndim){
     return newtensor;
 }
 
-CTensor* add_tensor(CTensor* tensor1, CTensor* tensor2) {
+FloatTensor* add_tensor(FloatTensor* tensor1, FloatTensor* tensor2) {
     // take out the max dim and tell it's ndim_result
     int ndim_result = broadcast_shape(tensor1, tensor2, NULL);
     if (ndim_result == -1) {
@@ -104,7 +105,7 @@ CTensor* add_tensor(CTensor* tensor1, CTensor* tensor2) {
     }
 
     float* result_data = (float*)malloc(total_elements * sizeof(float)); 
-    CTensor* result = init_tensor(result_data, result_shape, ndim_result); 
+    FloatTensor* result = init_tensor(result_data, result_shape, ndim_result); 
 
     //now caculate the offset of the tensor at wich position the tensor data go
     // update the new tensor data
@@ -129,7 +130,7 @@ CTensor* add_tensor(CTensor* tensor1, CTensor* tensor2) {
     return result;
 }
 
-CTensor* mul_ele_tensor(CTensor* tensor1, CTensor* tensor2) {
+FloatTensor* mul_ele_tensor(FloatTensor* tensor1, FloatTensor* tensor2) {
 
     int ndim_result = broadcast_shape(tensor1, tensor2, NULL);
     if (ndim_result == -1) {
@@ -152,7 +153,7 @@ CTensor* mul_ele_tensor(CTensor* tensor1, CTensor* tensor2) {
 
     float* result_data = (float*)malloc(total_elements * sizeof(float));
 
-    CTensor* result = init_tensor(result_data, result_shape, ndim_result);
+    FloatTensor* result = init_tensor(result_data, result_shape, ndim_result);
 
     for (int idx = 0; idx < total_elements; idx++) {
         int offset1 = 0, offset2 = 0;
@@ -175,17 +176,17 @@ CTensor* mul_ele_tensor(CTensor* tensor1, CTensor* tensor2) {
     return result;
 }
 
-CTensor* pow_tensor(CTensor* tensor1, float num){
+FloatTensor* pow_tensor(FloatTensor* tensor1, float num){
 
     float *data = (float*)malloc(tensor1->size * sizeof(float));
     for (int k = 0; k < tensor1->size; k++){
         data[k] = pow(tensor1->data[k], num);
     }
-    CTensor* pow_ans_tensor = init_tensor(data, tensor1->shape, tensor1->dim);
+    FloatTensor* pow_ans_tensor = init_tensor(data, tensor1->shape, tensor1->dim);
     return pow_ans_tensor;
 }
 
-CTensor* pow_two_tensor(CTensor* tensor1, CTensor* tensor2) {
+FloatTensor* pow_two_tensor(FloatTensor* tensor1, FloatTensor* tensor2) {
 
     int ndim_result = broadcast_shape(tensor1, tensor2, NULL);
     if (ndim_result == -1) {
@@ -207,7 +208,7 @@ CTensor* pow_two_tensor(CTensor* tensor1, CTensor* tensor2) {
 
     float* result_data = (float*)malloc(total_elements * sizeof(float));
 
-    CTensor* result = init_tensor(result_data, result_shape, ndim_result);
+    FloatTensor* result = init_tensor(result_data, result_shape, ndim_result);
 
     for (int idx = 0; idx < total_elements; idx++) {
         int offset1 = 0, offset2 = 0;
@@ -230,7 +231,7 @@ CTensor* pow_two_tensor(CTensor* tensor1, CTensor* tensor2) {
     return result;
 }
 
-void display_tensor(CTensor *tensor){
+void display_tensor(FloatTensor *tensor){
     printf("Tensor [data = (");
     for (int i = 0; i < tensor->size; i++){
         printf("%f, ", tensor->data[i]);
@@ -252,10 +253,10 @@ int main(){
    int dim1 = 1;
    int dim2 = 1;
 
-    CTensor* tensor1 = init_tensor(data1, shape1, dim1);
-    CTensor* tensor2 = init_tensor(data2, shape2, dim2);
+    FloatTensor* tensor1 = init_tensor(data1, shape1, dim1);
+    FloatTensor* tensor2 = init_tensor(data2, shape2, dim2);
 
-    CTensor* result = add_tensor(tensor1, tensor2);
+    FloatTensor* result = add_tensor(tensor1, tensor2);
 
     display_tensor(result);
 }

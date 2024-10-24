@@ -2,21 +2,22 @@
 from libc.stdlib cimport malloc, free
 import numpy as np
 
-cdef extern from "../storage/storage.h":
-    ctypedef struct CTensor:
+cdef extern from "../storage/Float_tensor.h":
+    ctypedef struct FloatTensor:
         float *data
         int *shape
         int *stride
         int dim
         int size
-    
-    int broadcast_shape(CTensor* tensor1, CTensor* tensor2, int *ans)
-    CTensor* init_tensor(float *data, int *shape, int dim)
-    CTensor* add_tensor(CTensor* tensor1, CTensor* tensor2)
-    CTensor* mul_ele_tensor(CTensor* tensor1, CTensor* tenosr2)
-    CTensor* pow_two_tensor(CTensor* tensor1, CTensor* tensor2)
-    CTensor* pow_tensor(CTensor* tensor1, float num)
-    
+        
+cdef extern from "../storage/methods.h":    
+    int broadcast_shape(FloatTensor* tensor1, FloatTensor* tensor2, int *ans)
+    FloatTensor* init_tensor(float *data, int *shape, int dim)
+    FloatTensor* add_tensor(FloatTensor* tensor1, FloatTensor* tensor2)
+    FloatTensor* mul_ele_tensor(FloatTensor* tensor1, FloatTensor* tenosr2)
+    FloatTensor* pow_two_tensor(FloatTensor* tensor1, FloatTensor* tensor2)
+    FloatTensor* pow_tensor(FloatTensor* tensor1, float num)
+
 cdef class Tensor:
     """
         Class to repesent a Tensor.
@@ -56,7 +57,7 @@ cdef class Tensor:
             pow the Tensor or number.
         
     """
-    cdef CTensor* tensor
+    cdef FloatTensor* tensor
     cdef list _item
     cdef tuple _shape
     cdef int _ndim
@@ -124,7 +125,7 @@ cdef class Tensor:
     cdef void __convert_and_init(self, data_list: list, arr_shape: tuple):
         """
         This function converts Python data_list and arr_shape into C types
-        and initializes the CTensor using init_tensor.
+        and initializes the FloatTensor using init_tensor.
         """
         cdef int i
         cdef int data_len = len(data_list)  # Initialize data_len properly
