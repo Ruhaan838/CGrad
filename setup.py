@@ -7,7 +7,8 @@ ext_modules = [
         "cgrad.tensor.Tensorwrapper", 
         sources=[
             'cgrad/tensor/Tensorwrapper.pyx',  
-            'cgrad/tensor/tensor.c'  
+            'cgrad/tensor/tensor.c',
+            'cgrad/gemm/matmulNd.c'
         ],
         include_dirs=[numpy.get_include()]
     )

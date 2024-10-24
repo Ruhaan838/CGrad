@@ -1,22 +1,25 @@
-## for now this is to depend on numpy but I try my hard to avoid this (🤞)
+## for now this is depend on numpy but I try my hard to avoid this (🤞)
 from libc.stdlib cimport malloc, free
 import numpy as np
 
-cdef extern from "../storage/storage.h":
-    ctypedef struct CTensor:
+cdef extern from "../storage/Float_tensor.h":
+    ctypedef struct FloatTensor:
         float *data
         int *shape
         int *stride
         int dim
         int size
-    
-    int broadcast_shape(CTensor* tensor1, CTensor* tensor2, int *ans)
-    CTensor* init_tensor(float *data, int *shape, int dim)
-    CTensor* add_tensor(CTensor* tensor1, CTensor* tensor2)
-    CTensor* mul_ele_tensor(CTensor* tensor1, CTensor* tenosr2)
-    CTensor* pow_two_tensor(CTensor* tensor1, CTensor* tensor2)
-    CTensor* pow_tensor(CTensor* tensor1, float num)
-    
+        
+cdef extern from "../storage/methods.h":
+    int broadcast_shape(FloatTensor* tensor1, FloatTensor* tensor2, int *ans)
+    int matmul_broadcast_shape(int dim1, int dim2, int* shape1, int* shape2, int* shape3, int max_dim);
+    FloatTensor* init_tensor(float *data, int *shape, int dim)
+    FloatTensor* add_tensor(FloatTensor* tensor1, FloatTensor* tensor2)
+    FloatTensor* mul_ele_tensor(FloatTensor* tensor1, FloatTensor* tenosr2)
+    FloatTensor* pow_two_tensor(FloatTensor* tensor1, FloatTensor* tensor2)
+    FloatTensor* pow_tensor(FloatTensor* tensor1, float num)
+    FloatTensor* matmulNd(FloatTensor* tensor1, FloatTensor* tensor2)
+
 cdef class Tensor:
     """
         Class to repesent a Tensor.
@@ -56,7 +59,7 @@ cdef class Tensor:
             pow the Tensor or number.
         
     """
-    cdef CTensor* tensor
+    cdef FloatTensor* tensor
     cdef list _item
     cdef tuple _shape
     cdef int _ndim
@@ -124,7 +127,7 @@ cdef class Tensor:
     cdef void __convert_and_init(self, data_list: list, arr_shape: tuple):
         """
         This function converts Python data_list and arr_shape into C types
-        and initializes the CTensor using init_tensor.
+        and initializes the FloatTensor using init_tensor.
         """
         cdef int i
         cdef int data_len = len(data_list)  # Initialize data_len properly
@@ -276,6 +279,15 @@ cdef class Tensor:
         else:
             raise TypeError(f"Unspported type for division: {type(other)}")
 
+    def __matmul__(self, other):
+        """
+            Function for mutiply the N dim matrix
+        """
+        if isinstance(other, Tensor):
+            return self._matmul(other)
+        else:
+            raise TypeError(f"Unspport type for matrix multiplication {type(other)}")
+
     def _slice_data(self, data, indx):
         return Tensor(data[indx])
 
@@ -402,6 +414,24 @@ cdef class Tensor:
         new_pow_data = new_pow_data.reshape(new_shape)
 
         return Tensor(new_pow_data, (self, num))
+
+    cdef _matmul(self, Tensor other):
+        cdef int max_dim = self.tensor.dim if self.tensor.dim > other.tensor.dim else other.tensor.dim 
+        cdef int valid = matmul_broadcast_shape(self.tensor.dim, other.tensor.dim, self.tensor.shape, other.tensor.shape, other.tensor.shape, max_dim)
+
+        if valid == -1:
+            raise ValueError(f"Can't multiply the matrix shape: {self._shape} and {other._shape}")
+
+        new_matmul_tensor = matmulNd(self.tensor, other.tensor)
+        
+        if new_matmul_tensor == NULL:
+            raise MemoryError("Failed to allocate the memory for the matmul tensor.")
+
+        new_matmul_data = np.array([new_matmul_tensor.data[i] for i in range(new_matmul_tensor.size)])
+        new_shape = tuple(new_matmul_tensor.shape[i] for i in range(new_matmul_tensor.dim))
+        new_matmul_data = new_matmul_data.reshape(new_shape)
+
+        return Tensor(new_matmul_data, (self, other))
 
     def __repr__(self):
         return f"Tensor(Data = {self._item}, Shape = {self._shape})"
