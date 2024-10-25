@@ -5,6 +5,7 @@
 
 #include "../storage/Float_tensor.h"
 #include "../storage/methods.h"
+#include "../tensor/tensor.c"
 
 FloatTensor* random_tensor(int *shape, int ndim, int min, int max) {
     int size = 1;
@@ -43,3 +44,12 @@ FloatTensor* random_tensor_n(int *shape, int ndim) {
     FloatTensor* new_tensor = init_tensor(data, shape, ndim);
     return new_tensor;
 }
+
+// int main(){
+//     int shape[] = {2,3};
+//     int dim = 2;
+    
+//     FloatTensor* random_ten = random_tensor_n(shape, dim);
+
+//     display_tensor(random_ten);
+// }

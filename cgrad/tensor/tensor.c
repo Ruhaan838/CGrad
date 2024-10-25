@@ -242,21 +242,3 @@ void display_tensor(FloatTensor *tensor){
     }
     printf("), Dim = %d ]\n", tensor->dim);
 }
-
-int main(){
-   float data1[] = {1.0, 2.0, 3.0};
-   float data2[] = {1.0};
-
-   int shape1[] = {1,3};
-   int shape2[] = {1};
-   
-   int dim1 = 1;
-   int dim2 = 1;
-
-    FloatTensor* tensor1 = init_tensor(data1, shape1, dim1);
-    FloatTensor* tensor2 = init_tensor(data2, shape2, dim2);
-
-    FloatTensor* result = add_tensor(tensor1, tensor2);
-
-    display_tensor(result);
-}
