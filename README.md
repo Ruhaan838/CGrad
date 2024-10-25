@@ -1,7 +1,12 @@
 <p align="center">
     <image src = "images/logo.png" />
 </p>
-
+        
+## ⏭️🥅 Next goal:
+- [ ] Grad engine
+- [ ] randn Generator
+- [ ] stop use of numpy
+        
 ## ✨ Overview
 
 Lightweight and Efficient library for performing tensor operations. **CGrad** is a module designed to handle all gradient computations, and most matrix manipulation and numerical work generally required for tasks in machine learning and deep learning. 🤖📚
@@ -64,6 +69,16 @@ c = cgrad.Tensor([[1.0, 2.0], [3.0, 4.0]])
 d = cgrad.Tensor([[5.0, 6.0], [7.0, 8.0]])
 result = c * d  # Element-wise multiplication
 ```
+
+### 📐 Advance Tensor Operations
+
+CGrad supports advanced operations like matrix multiplication etc.:
+``` python
+a = cgrad.randn((1,2,3))
+b = cgrad.randn((5,3,2))
+result = a @ b
+```
+Note: `cgrad.matmul` is still underdevelopment.
 
 ### 🔥 Gradient Computation
 
