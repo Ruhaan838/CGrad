@@ -32,7 +32,7 @@ def rand(shape, min=0, max=10000, seed=42):
 
     return Tensor(new_random_data)
 
-def randn(shape, seed):
+def randn(shape, seed=42):
     cdef int* c_shape = <int*>malloc(sizeof(int) * len(shape)) 
 
     for i in range(len(shape)):
