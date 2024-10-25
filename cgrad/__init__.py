@@ -1,2 +1,3 @@
 from .tensor.Tensorwrapper import Tensor
-__all__ = ['Tensor']
+from .randoms.random_methods import rand, randn
+__all__ = ['Tensor', 'rand', 'randn']
