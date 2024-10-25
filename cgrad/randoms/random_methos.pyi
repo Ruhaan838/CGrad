@@ -1,0 +1,6 @@
+from typing import List, Tuple, Optional
+from cgrad.tensor.Tensorwrapper import Tensor
+
+def randn(shape: List[int] | Tuple[int], seed: Optional[int]) -> Tensor: ...
+def rand(shape: List[int] | Tuple[int], min:Optional[int], max:Optional[int], seed:Optional[int]) -> Tensor: ...
+

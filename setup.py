@@ -6,7 +6,7 @@ ext_modules = [
     Extension(
         "cgrad.tensor.Tensorwrapper", 
         sources=[
-            'cgrad/tensor/Tensorwrapper.pyx',  
+            'cgrad/tensor/Tensorwrapper.pyx',
             'cgrad/tensor/tensor.c',
             'cgrad/gemm/matmulNd.c',
         ],
@@ -41,11 +41,15 @@ setup(
         "Topic :: Software Development :: Libraries",
         "Topic :: Scientific/Engineering :: Artificial Intelligence"
     ],
-    ext_modules=cythonize(ext_modules, annotate=True),  
+    ext_modules=cythonize(ext_modules, annotate=True), 
     license="MIT",  
     install_requires=["numpy"], 
     package_dir={'': '.'},  
     packages=find_packages(), 
+    package_data={
+        'cgrad.Tensor':['cgrad/tensor/Tensorwrapper.pyi'],
+        'cgrad.rand':['cgrad/randoms/random_methos.pyi'],
+    },
     include_package_data=True,  
     zip_safe=False  
 )
