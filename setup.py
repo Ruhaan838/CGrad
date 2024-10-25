@@ -8,7 +8,15 @@ ext_modules = [
         sources=[
             'cgrad/tensor/Tensorwrapper.pyx',  
             'cgrad/tensor/tensor.c',
-            'cgrad/gemm/matmulNd.c'
+            'cgrad/gemm/matmulNd.c',
+        ],
+        include_dirs=[numpy.get_include()]
+    ),
+    Extension(
+        "cgrad.randoms.random_methods",
+        sources=[
+            'cgrad/randoms/random_methods.pyx',
+            'cgrad/randoms/random_tensor.c'
         ],
         include_dirs=[numpy.get_include()]
     )
