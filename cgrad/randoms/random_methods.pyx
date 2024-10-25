@@ -11,17 +11,17 @@ cdef extern from "../storage/Float_tensor.h":
         int size
 
 cdef extern from "../storage/methods.h":
-    FloatTensor* random_tensor(int *shape, int ndim, int min, int max)
-    FloatTensor* random_tensor_n(int *shape, int ndim)
+    FloatTensor* random_tensor(int *shape, int ndim, int min, int max, int seed)
+    FloatTensor* random_tensor_n(int *shape, int ndim, int seed)
 
-def rand(shape, min=0, max=10000):
-    cdef int* c_shape = <int*>malloc(sizeof(int) * len(shape))  # Allocate for full shape
+def rand(shape, min=0, max=10000, seed=42):
+    cdef int* c_shape = <int*>malloc(sizeof(int) * len(shape)) 
 
     for i in range(len(shape)):
         c_shape[i] = <int>shape[i]
 
     ndim = len(shape)
-    new_random_tensor = random_tensor(c_shape, <int>ndim, <int>min, <int>max)
+    new_random_tensor = random_tensor(c_shape, <int>ndim, <int>min, <int>max, <int> seed)
 
     if new_random_tensor == NULL:
         raise MemoryError("Unable to allocate memory for new_random tensor")
@@ -32,14 +32,14 @@ def rand(shape, min=0, max=10000):
 
     return Tensor(new_random_data)
 
-def randn(shape):
-    cdef int* c_shape = <int*>malloc(sizeof(int) * len(shape))  # Allocate for full shape
+def randn(shape, seed):
+    cdef int* c_shape = <int*>malloc(sizeof(int) * len(shape)) 
 
     for i in range(len(shape)):
         c_shape[i] = <int>shape[i]
 
     ndim = len(shape)
-    new_random_tensor = random_tensor_n(c_shape, <int>ndim)
+    new_random_tensor = random_tensor_n(c_shape, <int>ndim, <int> seed)
 
     if new_random_tensor == NULL:
         raise MemoryError("Unable to allocate memory for new_random tensor")

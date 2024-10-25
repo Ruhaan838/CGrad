@@ -7,7 +7,7 @@
 #include "../storage/methods.h"
 #include "../tensor/tensor.c"
 
-FloatTensor* random_tensor(int *shape, int ndim, int min, int max) {
+FloatTensor* random_tensor(int *shape, int ndim, int min, int max, int seed) {
     int size = 1;
     for (int i = 0; i < ndim; i++) {
         size *= shape[i];
@@ -15,7 +15,7 @@ FloatTensor* random_tensor(int *shape, int ndim, int min, int max) {
 
     float* data = (float*)malloc(size * sizeof(float));
 
-    srand(time(NULL));
+    srand(seed);
 
     for (int i = 0; i < size; i++) {
         float num = ((float)rand() / (float)RAND_MAX) * (max - min) + min; 
@@ -26,7 +26,7 @@ FloatTensor* random_tensor(int *shape, int ndim, int min, int max) {
     return new_tensor;
 }
 
-FloatTensor* random_tensor_n(int *shape, int ndim) {
+FloatTensor* random_tensor_n(int *shape, int ndim, int seed) {
     int size = 1;
     for (int i = 0; i < ndim; i++) {
         size *= shape[i];
@@ -34,7 +34,7 @@ FloatTensor* random_tensor_n(int *shape, int ndim) {
 
     float* data = (float*)malloc(size * sizeof(float));
 
-    srand(time(NULL));
+    srand(seed);
 
     for (int i = 0; i < size; i++) {
         float num = (float)rand() / (float)RAND_MAX; 

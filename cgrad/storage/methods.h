@@ -22,6 +22,6 @@ FloatTensor* pow_two_tensor(FloatTensor* tensor1, FloatTensor* tenso2);
 FloatTensor* matmulNd(FloatTensor* tensor1, FloatTensor* tensor2);
 
 //random number methods
-FloatTensor* random_tensor(int *shape, int ndim,int min, int max);
-FloatTensor* random_tensor_n(int *shape, int ndim);
+FloatTensor* random_tensor(int *shape, int ndim,int min, int max, int seed);
+FloatTensor* random_tensor_n(int *shape, int ndim, int seed);
 #endif
