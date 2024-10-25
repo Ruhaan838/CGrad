@@ -31,15 +31,28 @@ int matmul_broadcast_shape(int dim1, int dim2, int* shape1, int* shape2, int* sh
     return max_dim;
 }
 
-void matmul2d(float* data1, float* data2, float* ans_data, int I_shape, int K_shape, int J_shape){
+void matmul2d(float* data1, float* data2, float* ans_data, int I_shape, int K_shape, int J_shape) {
+    int block_size = 256; 
 
-    for (int i = 0; i < I_shape; i++){
-        for(int j = 0; j < J_shape; j++){
-            float sum = 0.0;
-            for (int k = 0; k < K_shape; k++){
-                sum += data1[i * K_shape + k] * data2[k * J_shape + j];
+    for (int i = 0; i < I_shape; i++) {
+        for (int j = 0; j < J_shape; j++) {
+            ans_data[i * J_shape + j] = 0.0;
+        }
+    }
+
+    for (int ii = 0; ii < I_shape; ii += block_size) {
+        for (int jj = 0; jj < J_shape; jj += block_size) {
+            for (int kk = 0; kk < K_shape; kk += block_size) {
+                
+                for (int i = ii; i < ii + block_size && i < I_shape; i++) {
+                    for (int k = kk; k < kk + block_size && k < K_shape; k++) {
+                        float temp = data1[i * K_shape + k];
+                        for (int j = jj; j < jj + block_size && j < J_shape; j++) {
+                            ans_data[i * J_shape + j] += temp * data2[k * J_shape + j];
+                        }
+                    }
+                }
             }
-            ans_data[i * J_shape + j] = sum;
         }
     }
 }
