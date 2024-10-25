@@ -28,8 +28,8 @@ Lightweight and Efficient library for performing tensor operations. **CGrad** is
     git clone https://github.com/Ruhaan838/CGrad
     ```
     ``` 
-    python setup.py install
-    pip install -e.
+    python setup.py build_ext --inplace
+    pip install .
     ``` 
 
 ## 🚀 Getting Started
