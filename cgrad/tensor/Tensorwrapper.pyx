@@ -1,6 +1,7 @@
 ## for now this is depend on numpy but I try my hard to avoid this (🤞)
 from libc.stdlib cimport malloc, free
 import numpy as np
+import pprint
 
 cdef extern from "../storage/Float_tensor.h":
     ctypedef struct FloatTensor:
@@ -12,7 +13,7 @@ cdef extern from "../storage/Float_tensor.h":
         
 cdef extern from "../storage/methods.h":
     int broadcast_shape(FloatTensor* tensor1, FloatTensor* tensor2, int *ans)
-    int matmul_broadcast_shape(int dim1, int dim2, int* shape1, int* shape2, int* shape3, int max_dim);
+    int matmul_broadcast_shape(int dim1, int dim2, int* shape1, int* shape2, int* shape3);
     FloatTensor* init_tensor(float *data, int *shape, int dim)
     FloatTensor* add_tensor(FloatTensor* tensor1, FloatTensor* tensor2)
     FloatTensor* mul_ele_tensor(FloatTensor* tensor1, FloatTensor* tenosr2)
@@ -139,7 +140,7 @@ cdef class Tensor:
 
         # Copy data from the Python list to the C array
         for i in range(data_len):
-            c_data[i] = <float>data_list[i]
+            c_data[i] = <float>round(data_list[i], 4)
 
         # Allocate memory for shape
         cdef int shape_len = len(arr_shape)
@@ -284,7 +285,7 @@ cdef class Tensor:
             Function for mutiply the N dim matrix
         """
         if isinstance(other, Tensor):
-            return self._matmul(other)
+            return self.matmul(other)
         else:
             raise TypeError(f"Unspport type for matrix multiplication {type(other)}")
 
@@ -415,23 +416,26 @@ cdef class Tensor:
 
         return Tensor(new_pow_data, _prev=(self, num))
 
-    cdef _matmul(self, Tensor other):
-        cdef int max_dim = self.tensor.dim if self.tensor.dim > other.tensor.dim else other.tensor.dim 
-        cdef int valid = matmul_broadcast_shape(self.tensor.dim, other.tensor.dim, self.tensor.shape, other.tensor.shape, other.tensor.shape, max_dim)
+    cdef matmul(self, Tensor other):
 
-        if valid == -1:
-            raise ValueError(f"Can't multiply the matrix shape: {self._shape} and {other._shape}")
+        if isinstance(self, Tensor) and isinstance(other, Tensor):
+            max_dim = matmul_broadcast_shape(self.tensor.dim, other.tensor.dim, self.tensor.shape, other.tensor.shape, NULL)
 
-        new_matmul_tensor = matmulNd(self.tensor, other.tensor)
-        
-        if new_matmul_tensor == NULL:
-            raise MemoryError("Failed to allocate the memory for the matmul tensor.")
+            if max_dim == -1:
+                raise ValueError(f"Unable to do the Matrix Multiplication for Tesnor1 with shape {self.shape} and Tensor2 with shape {other.shape}")
+            
+            ans_matmul = matmulNd(self.tensor, other.tensor)
+            
+            if ans_matmul == NULL:
+                raise MemoryError("Failed to allocate memory for matmul tensor.")
+            
+            new_matmul_data = np.array([ans_matmul.data[i] for i in range(ans_matmul.size)])
+            new_shape = tuple(ans_matmul.shape[i] for i in range(ans_matmul.dim))
+            new_matmul_data = new_matmul_data.reshape(new_shape)
 
-        new_matmul_data = np.array([new_matmul_tensor.data[i] for i in range(new_matmul_tensor.size)])
-        new_shape = tuple(new_matmul_tensor.shape[i] for i in range(new_matmul_tensor.dim))
-        new_matmul_data = new_matmul_data.reshape(new_shape)
-
-        return Tensor(new_matmul_data, _prev=(self, other))
+            return Tensor(new_matmul_data, _prev=(self, other))
 
     def __repr__(self):
-        return f"Tensor(Data = {self._item}, Shape = {self._shape})"
+        round_list = np.round(self._item, 4)
+        formate_list = pprint.pformat(round_list.tolist())
+        return f"Tensor(Data = {formate_list}, Shape = {self._shape})"

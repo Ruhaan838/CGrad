@@ -8,7 +8,7 @@ void cal_stride(FloatTensor *tensor);
 void broadcast_stride(FloatTensor* tensor1, int* r_stride1, int max_dim);
 int broadcast_shape(FloatTensor* tensor1, FloatTensor* tensor2, int *ans);
 void display_tensor(FloatTensor *tensor);
-int matmul_broadcast_shape(int dim1, int dim2, int* shape1, int* shape2, int* shape3, int max_dim);
+int matmul_broadcast_shape(int dim1, int dim2, int* shape1, int* shape2, int* shape3);
 void matmul2d(float* data1, float* data2, float* ans_data, int I_shape, int J_shape, int K_shape);
 
 //initalization

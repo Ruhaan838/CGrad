@@ -5,7 +5,10 @@
 
 #include "../storage/methods.h"
 
-int matmul_broadcast_shape(int dim1, int dim2, int* shape1, int* shape2, int* shape3, int max_dim) {
+int matmul_broadcast_shape(int dim1, int dim2, int* shape1, int* shape2, int* shape3) {
+
+    int max_dim = dim1 > dim2 ? dim1 : dim2;
+
     if (shape1[dim1 - 1] != shape2[dim2 - 2]) {
         return -1;
     }
