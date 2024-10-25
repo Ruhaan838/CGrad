@@ -20,4 +20,8 @@ FloatTensor* mul_ele_tensor(FloatTensor* tensor1, FloatTensor* tensor2);
 FloatTensor* pow_tensor(FloatTensor* tenosr1, float num);
 FloatTensor* pow_two_tensor(FloatTensor* tensor1, FloatTensor* tenso2);
 FloatTensor* matmulNd(FloatTensor* tensor1, FloatTensor* tensor2);
+
+//random number methods
+FloatTensor* random_tensor(int *shape, int ndim,int min, int max);
+FloatTensor* random_tensor_n(int *shape, int ndim);
 #endif

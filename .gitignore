@@ -8,3 +8,6 @@
 .pytest_cache
 /examples/temp.py
 /.idea
+
+/cgrad/randoms/random_methods.html
+/cgrad/randoms/random_methods.c
