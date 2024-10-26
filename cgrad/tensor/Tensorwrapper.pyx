@@ -2,7 +2,7 @@
 from libc.stdlib cimport malloc, free
 import numpy as np
 import pprint
-cimport cgrad.tensor.Tensorwrapper
+
 
 cdef extern from "../storage/Float_tensor.h":
     ctypedef struct FloatTensor:
