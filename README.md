@@ -100,12 +100,24 @@ print(x.grad)  # Gradients of x
 print(y.grad)  # Gradients of y
 ```
 
+## 📖 Documentation
+
+For more detailed information, please visit our [documentation website](docs/index.html).
+
 ## 🤝 Contributing
 
 I ❤️ contributions! If you’d like to contribute to **CGrad**, please:
 
 1. 🍴 Clone the repository.
 2. 🌱 Create a new branch for your feature or bugfix.
+3. ✉️ Submit a pull request.
+
+### Contributing to Documentation
+
+We welcome contributions to our documentation! If you’d like to contribute:
+
+1. 🍴 Clone the repository.
+2. 🌱 Create a new branch for your documentation updates.
 3. ✉️ Submit a pull request.
 
 ## 📖 Reading
