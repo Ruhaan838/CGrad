@@ -2,6 +2,7 @@
 from libc.stdlib cimport malloc, free
 import numpy as np
 import pprint
+cimport cgrad.tensor.Tensorwrapper
 
 cdef extern from "../storage/Float_tensor.h":
     ctypedef struct FloatTensor:
@@ -22,49 +23,13 @@ cdef extern from "../storage/methods.h":
     FloatTensor* matmulNd(FloatTensor* tensor1, FloatTensor* tensor2)
 
 cdef class Tensor:
-    """
-        Class to repesent a Tensor.
-
-        Attributes
-        ----------
-        data : list | tuple | np.array | int | float
-            Any Iterable 
-
-        Methods
-        ----------
-        item:
-            return the item of the tensor in list from.
-        shape:
-            return the shape of the tensor in tuple from.
-        ndim:
-            return the dim of the tensor in int from.
-
-        add(other):
-            other: Tensor | int | float
-            add the Tensor or number.
-
-        sub(other):
-            other: Tensor | int | float
-            sub the Tensor or number.
-
-        mul(other):
-            other: Tensor | int | float
-            mul the Tensor or number.
-
-        div(other):
-            other: Tensor | int | float
-            div the Tensor or number.
-
-        pow(other):
-            other: Tensor | int | float
-            pow the Tensor or number.
-        
-    """
     cdef FloatTensor* tensor
     cdef list _item
     cdef tuple _shape
     cdef int _ndim
     cdef set _prev
+    cdef list _grad
+    cdef object _backward
     def __init__(self, data: list| tuple| np.array| int| float, _prev=()):
         """
             Function that initalize the tensor using list, tuple, np.array, int or float
@@ -98,6 +63,9 @@ cdef class Tensor:
         self._shape = arr_shape
         self._ndim = dim
 
+        self._grad = []
+        self._backward = None
+
     @property
     def item(self):
         return self._item
@@ -110,6 +78,19 @@ cdef class Tensor:
     def ndim(self):
         return self._ndim
     
+    @property
+    def grad(self):
+        return self._grad
+
+    @grad.setter
+    def grad(self, value):
+        if isinstance(value, Tensor):
+            self._grad = value.item
+        elif isinstance(value, list):
+            self._grad = value 
+        else:
+            raise ValueError("Unsported the grad type")
+
     def add(self,other):
         return self + other
     
@@ -124,6 +105,9 @@ cdef class Tensor:
     
     def div(self, other):
         return self / other
+    
+    def matmul(self, other):
+        return self @ other
 
     cdef void __convert_and_init(self, data_list: list, arr_shape: tuple):
         """
@@ -194,27 +178,20 @@ cdef class Tensor:
 
 #sub method and also helper funtion
     def __sub__(self, other):
-        """
-            Function for subtracting tensor or scalar to a tensor.
-        """
+        """Subtraction of a tensor or scalar from self."""
         if isinstance(other, Tensor):
-            new_other = other * -1
-            return self._add_tensor(new_other)
+            return self._add_tensor(other * -1)
         elif isinstance(other, (int, float)):
-            new_other = other * -1
-            return self._add_scalar(new_other)
+            return self._add_scalar(-other)
         else:
-            raise TypeError(f"Unspported type for subtraction: {type(other)}")
-    
+            raise TypeError(f"Unsupported type for subtraction: {type(other)}")
+
     def __rsub__(self, other):
-        if isinstance(other, Tensor):
-            new_other = other * -1
-            return self._add_tensor(new_other)
-        elif isinstance(other, (int, float)):
-            new_other = other * -1
-            return self._add_scalar(new_other)
+        """Handles scalar - tensor by reversing order."""
+        if isinstance(other, (int, float)):
+            return Tensor(other) - self
         else:
-            raise TypeError(f"Unspported type for subtraction: {type(other)}")
+            raise TypeError(f"Unsupported type for reverse subtraction: {type(other)}")
 
 # mul and helper functions
     def __mul__(self, other):
@@ -232,10 +209,8 @@ cdef class Tensor:
         """
         Function for reverse mutiply also scalar.
         """
-        if isinstance(other, Tensor):
-            return self._mul_tensor(other)
-        elif isinstance(other, (int, float)):
-            return self._mul_scaler(other)
+        if isinstance(other, (int, float)):
+            return Tensor(other) * self
         else:
             raise TypeError(f"Unspported type for multiplication: {type(other)}")
 
@@ -269,14 +244,8 @@ cdef class Tensor:
         """
             Function for devide the two tensor and scaler
         """
-        if isinstance(other, Tensor):
-            return self._mul_tensor(other ** -1)
-
-        elif isinstance(other, (int, float)):
-            if other == 0:
-                raise ArithmeticError("You can't divide the tensor with '0' ")
-            return self._mul_scaler(other ** -1)
-            
+        if isinstance(other, (int, float)):
+            return Tensor(other) / self
         else:
             raise TypeError(f"Unspported type for division: {type(other)}")
 
@@ -285,7 +254,7 @@ cdef class Tensor:
             Function for mutiply the N dim matrix
         """
         if isinstance(other, Tensor):
-            return self.matmul(other)
+            return self._matmul(other)
         else:
             raise TypeError(f"Unspport type for matrix multiplication {type(other)}")
 
@@ -416,7 +385,7 @@ cdef class Tensor:
 
         return Tensor(new_pow_data, _prev=(self, num))
 
-    cdef matmul(self, Tensor other):
+    cdef _matmul(self, Tensor other):
 
         if isinstance(self, Tensor) and isinstance(other, Tensor):
             max_dim = matmul_broadcast_shape(self.tensor.dim, other.tensor.dim, self.tensor.shape, other.tensor.shape, NULL)
