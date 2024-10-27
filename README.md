@@ -6,6 +6,10 @@
 - [ ] Grad engine
 - [ ] randn Generator
 - [ ] stop use of numpy
+- [ ] Build a Tensor for Int, Double, Long, etc. 
+- [ ] Use Fast matrix multiplication algorithm to reduce the time complexity. 
+- [ ] Make loss dir and make loss like "Tenh, ReLU, sigmoid, softmax" in more optimistic way. 
+
         
 ## ✨ Overview
 
