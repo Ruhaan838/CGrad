@@ -3,7 +3,7 @@
 </p>
         
 ## ⏭️🥅 Next goal:
-- [x] ~~Grad engine~~ -> new task: matmul autograd. -> scaler part still remaining.
+- [x] ~~Grad engine~~ -> new task: matmul/div autograd. -> scaler part still remaining.
 - [x] ~~randn Generator~~ -> with seed
 - [ ] stop use of numpy -> instead of make our own array like structure.
 - [ ] Build a Tensor for Int, Double, Long, etc. 
