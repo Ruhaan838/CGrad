@@ -19,6 +19,13 @@ ext_modules = [
             'cgrad/randoms/random_tensor.c'
         ],
         include_dirs=[numpy.get_include()]
+    ),
+    Extension(
+        "cgrad.autograd.calcgrad",
+        sources=[
+            'cgrad/autograd/calcgrad.pyx'
+        ],
+        include_dirs=[numpy.get_include()]
     )
 ]
 
@@ -48,7 +55,7 @@ setup(
     packages=find_packages(), 
     package_data={
         'cgrad.Tensor':['cgrad/tensor/Tensorwrapper.pyi'],
-        'cgrad':['cgrad/randoms/random_methos.pyi'],
+        'cgrad':['cgrad/randoms/random_methods.pyi'],
     },
     include_package_data=True,  
     zip_safe=False  
