@@ -19,6 +19,13 @@ ext_modules = [
             'cgrad/randoms/random_tensor.c'
         ],
         include_dirs=[numpy.get_include()]
+    ),
+    Extension(
+        "cgrad.autograd.calcgrad",
+        sources=[
+            'cgrad/autograd/calcgrad.pyx'
+        ],
+        include_dirs=[numpy.get_include()]
     )
 ]
 
