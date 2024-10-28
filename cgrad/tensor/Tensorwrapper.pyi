@@ -1,4 +1,4 @@
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Iterable
 import numpy as np
 
 class Tensor:
@@ -7,8 +7,11 @@ class Tensor:
 
         Attributes
         ----------
-        data : list | tuple | np.array | int | float
+        data : List | Tuple | np.array | int | float
             Any Iterable 
+        
+        require_grad: Optional[bool] = False
+            if `True` the gradient caculation is happend
 
         Methods
         ----------
@@ -44,13 +47,16 @@ class Tensor:
             matrix multiplication of the Two valid shape tensor.
         
     """
-    def __init__(self, data: List[float] | List[int] | Tuple[float] | Tuple[float] | np.array | int| float) -> None: ...
+    def __init__(self, data: List[float] | List[int] | Tuple[float] | Tuple[int] | Iterable | int| float, require_grad : Optional[bool] = False) -> None: ...
     """
-            Function that initalize the tensor using list, tuple, np.array, int or float
+            Function that initalize the tensor using List, Tuple, np.array, int or float
             Attributes
             ----------
             data : list | tuple | np.array | int | float
                 Any Iterable 
+                
+            require_grad: Optional[bool] = False
+                if `True` the gradient caculation is happend
     """
     @property
     def item(self) -> List[float]: ...
@@ -91,4 +97,8 @@ class Tensor:
     """
         Function for mutiply the N dim matrix
         internally call the self @ other
+    """
+    def backword(self) -> None: ...
+    """
+        Caculate the backward pass when if require_grad is True
     """

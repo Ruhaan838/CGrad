@@ -2,7 +2,7 @@
 from libc.stdlib cimport malloc, free
 import numpy as np
 import pprint
-
+from cgrad.autograd.calcgrad import add_grad_tensor, mul_grad_tensor, backward_node
 
 cdef extern from "../storage/Float_tensor.h":
     ctypedef struct FloatTensor:
@@ -28,9 +28,12 @@ cdef class Tensor:
     cdef tuple _shape
     cdef int _ndim
     cdef set _prev
+    cdef bint _re_grad #require_grad
     cdef list _grad
-    cdef object _backward
-    def __init__(self, data: list| tuple| np.array| int| float, _prev=()):
+    cdef object _backward_pass  #for store the function
+    cdef str _name_backward
+
+    def __init__(self, data: list| tuple| np.array| int| float, require_grad:bool = False):
         """
             Function that initalize the tensor using list, tuple, np.array, int or float
             Attributes
@@ -50,6 +53,9 @@ cdef class Tensor:
         except Exception as e:
             raise ValueError(f"Error in input data: {e}")
 
+        if not isinstance(require_grad, bool):
+            raise ValueError(f"require_grad is must in bool but you provide {type(require_grad)}")
+
         dim = len(arr_shape) #caculate the dim hope this is right 
         #flatten the data and its provide to the Tensor storage.
         data = arr.reshape(-1) 
@@ -58,13 +64,15 @@ cdef class Tensor:
         self.__convert_and_init(data_list, arr_shape) 
 
         #some acceable attributes
-        self._prev = set(_prev) 
+        self._prev = set() 
         self._item = arr.tolist()  
         self._shape = arr_shape
         self._ndim = dim
+        self._re_grad = require_grad
 
-        self._grad = []
-        self._backward = None
+        self._grad = np.zeros(arr.shape).tolist()
+        self._backward_pass = lambda: None
+        self._name_backward = ""
 
     @property
     def item(self):
@@ -82,6 +90,17 @@ cdef class Tensor:
     def grad(self):
         return self._grad
 
+    @property    
+    def require_grad(self):
+        return self._re_grad
+    
+    @require_grad.setter
+    def require_grad(self, value:bool):
+        if isinstance(value, bool):
+            self._re_grad = value
+        else:
+            raise ValueError("Unsported the type use bool values")
+
     @grad.setter
     def grad(self, value):
         if isinstance(value, Tensor):
@@ -90,6 +109,18 @@ cdef class Tensor:
             self._grad = value 
         else:
             raise ValueError("Unsported the grad type")
+            
+    @property
+    def prev(self):
+        return self._prev
+
+    def _backward(self):
+        return self._backward_pass()
+    
+    def backward(self):
+        if not self._re_grad:
+            raise AttributeError("Please set require_grad=True to calculate the gradient.")
+        return backward_node(self)
 
     def add(self,other):
         return self + other
@@ -146,22 +177,33 @@ cdef class Tensor:
             free(c_shape)
             raise MemoryError("Failed to initialize tensor")
 
+        free(c_data)
+        free(c_shape)
+
     def __getitem__(self, indx):
         if isinstance(indx, (int, slice, tuple)):
             return self._slice_data(np.array(self._item), indx)
         else:
             raise TypeError(f"Unsupported index type: {type(indx)}")
 
+    def __back_init__(self, name_backward="", backward_func=None):
+        """
+        Function that init the backprop function and it's name
+        """
+        self._name_backward = name_backward
+        self._backward_pass = backward_func 
+
 # add method and also helper function
     def __add__(self, other):
-        """
-        Function for adding tensors or adding a scalar to a tensor.
-        """
-
         if isinstance(other, Tensor):
-            return self._add_tensor(other)
+            ans = self._add_tensor(other)
+            ans.require_grad = self.require_grad or other.require_grad 
+            ans.__back_init__("<AddBackward>", add_grad_tensor(self, other, ans))
+            return ans
         elif isinstance(other, (int, float)):
-            return self._add_scalar(other)
+            ans = self._add_scalar(other)
+            ans.require_grad = self.require_grad
+            return ans
         else:
             raise TypeError(f"Unsupported type for addition: {type(other)}")
 
@@ -169,10 +211,9 @@ cdef class Tensor:
         """
         Function for reverse addition also scalar.
         """
-        if isinstance(other, Tensor):
-            return self._add_tensor(other)
-        elif isinstance(other, (int, float)):
-            return self._add_scalar(other)
+        if isinstance(other, (int, float)):
+            ans = self._add_scalar(other)
+            return ans
         else:
             raise TypeError(f"Unspported type for additation: {type(other)}")
 
@@ -180,37 +221,48 @@ cdef class Tensor:
     def __sub__(self, other):
         """Subtraction of a tensor or scalar from self."""
         if isinstance(other, Tensor):
-            return self._add_tensor(other * -1)
+            ans = self._add_tensor(other * -1)
+            ans.require_grad = self.require_grad or other.require_grad
+            ans.__back_init__("<SubBackward>", add_grad_tensor(self, other, ans))
+            return ans
         elif isinstance(other, (int, float)):
-            return self._add_scalar(-other)
+            ans = self._add_scalar(-other)
+            return ans
         else:
             raise TypeError(f"Unsupported type for subtraction: {type(other)}")
 
     def __rsub__(self, other):
         """Handles scalar - tensor by reversing order."""
         if isinstance(other, (int, float)):
-            return Tensor(other) - self
+            ans = Tensor(other) - self
+            return ans
         else:
             raise TypeError(f"Unsupported type for reverse subtraction: {type(other)}")
 
 # mul and helper functions
     def __mul__(self, other):
         """
-        Function for multiply tensors or multiply a scalar to a tensor.
+            Multiplication of a tensor or scalar from self.
         """
         if isinstance(other, Tensor):
-            return self._mul_tensor(other)
+            ans = self._mul_tensor(other)
+            ans.require_grad = self.require_grad or other.require_grad  
+            ans.__back_init__("<MulBackward>", mul_grad_tensor(self, other, ans))
+            return ans
         elif isinstance(other, (int, float)):
-            return self._mul_scaler(other)
+            ans = self._mul_scaler(other)
+            ans.require_grad = self.require_grad
+            return ans
         else:
-            raise TypeError(f"Unspported type for multiplication: {type(other)}")
+            raise TypeError(f"Unsupported type for multiplication: {type(other)}")
     
     def __rmul__(self, other):
         """
         Function for reverse mutiply also scalar.
         """
         if isinstance(other, (int, float)):
-            return Tensor(other) * self
+            ans = Tensor(other) * self
+            return ans
         else:
             raise TypeError(f"Unspported type for multiplication: {type(other)}")
 
@@ -219,9 +271,11 @@ cdef class Tensor:
             Function for do the power of any tenor
         """
         if isinstance(other, Tensor):
-            return self._pow_tensor(other)
+            ans = self._pow_tensor(other)
+            return ans
         elif isinstance(other, (int, float)):
-            return self._pow_scaler(other)
+            ans = self._pow_scaler(other)
+            return ans
         else:
             raise TypeError(f"Unspported type for power: {type(other)}")
     
@@ -230,12 +284,16 @@ cdef class Tensor:
             Function for devide the two tensor and scaler
         """
         if isinstance(other, Tensor):
-            return self._mul_tensor(other ** -1)
+            ans = self._mul_tensor(other ** -1)
+            ans.require_grad = self.require_grad or other.require_grad
+            ans.__back_init__("<DivBackword>", mul_grad_tensor(self, other, ans))
+            return ans
 
         elif isinstance(other, (int, float)):
             if other == 0:
                 raise ArithmeticError("You can't devide the tensor with '0' ")
-            return self._mul_scaler(other ** -1)
+            ans = self._mul_scaler(other ** -1)
+            return ans
 
         else:
             raise TypeError(f"Unspported type for devision: {type(other)}")
@@ -245,7 +303,8 @@ cdef class Tensor:
             Function for devide the two tensor and scaler
         """
         if isinstance(other, (int, float)):
-            return Tensor(other) / self
+            ans = Tensor(other) / self
+            return ans
         else:
             raise TypeError(f"Unspported type for division: {type(other)}")
 
@@ -254,7 +313,8 @@ cdef class Tensor:
             Function for mutiply the N dim matrix
         """
         if isinstance(other, Tensor):
-            return self._matmul(other)
+            ans = self._matmul(other)
+            return ans
         else:
             raise TypeError(f"Unspport type for matrix multiplication {type(other)}")
 
@@ -279,7 +339,9 @@ cdef class Tensor:
         new_added_data = np.array([new_add_tensor.data[i] for i in range(new_add_tensor.size)])
         new_shape = tuple(new_add_tensor.shape[i] for i in range(new_add_tensor.dim))
         new_added_data = new_added_data.reshape(new_shape)
-        return Tensor(new_added_data, _prev=(self, other))
+        ans_tensor = Tensor(new_added_data)
+        ans_tensor._prev = set((self, other))
+        return ans_tensor
 
     cdef _add_scalar(self, double scalar):
         """
@@ -302,7 +364,9 @@ cdef class Tensor:
         new_added_data = np.array([new_add_tensor.data[i] for i in range(new_add_tensor.size)])
         new_shape = tuple(new_add_tensor.shape[i] for i in range(new_add_tensor.dim))
         new_added_data = new_added_data.reshape(new_shape)
-        return Tensor(new_added_data, _prev=(self, scalar))
+        ans_tensor = Tensor(new_added_data)
+        ans_tensor._prev = set((self, scalar))
+        return ans_tensor
 
     cdef _mul_tensor(self, Tensor other):
         """
@@ -323,7 +387,9 @@ cdef class Tensor:
         new_shape = tuple(new_mul_tensor.shape[i] for i in range(new_mul_tensor.dim))
         new_mul_data = new_mul_data.reshape(new_shape)
 
-        return Tensor(new_mul_data, _prev=(self, other))
+        ans_tensor = Tensor(new_mul_data)
+        ans_tensor._prev = set((self, other))
+        return ans_tensor
 
     cdef _mul_scaler(self, double scalar):
         """
@@ -347,7 +413,9 @@ cdef class Tensor:
         new_shape = tuple(new_mul_tensor.shape[i] for i in range(new_mul_tensor.dim))
         new_mul_data = new_mul_data.reshape(new_shape)
 
-        return Tensor(new_mul_data, _prev=(self, scalar))
+        ans_tensor = Tensor(new_mul_data)
+        ans_tensor._prev = set((self, scalar))
+        return ans_tensor
 
     cdef _pow_tensor(self, Tensor other):
         """
@@ -368,7 +436,10 @@ cdef class Tensor:
         new_shape = tuple(two_pow_tensor.shape[i] for i in range(two_pow_tensor.dim))
         two_pow_data = two_pow_data.reshape(new_shape)
 
-        return Tensor(two_pow_data, _prev=(self, other))
+        ans_tensor = Tensor(two_pow_data)
+        ans_tensor._prev = set((self, other))
+
+        return ans_tensor
 
     cdef _pow_scaler(self, float num):
         """
@@ -382,8 +453,9 @@ cdef class Tensor:
         new_pow_data = np.array([new_pow_tensor.data[i] for i in range(new_pow_tensor.size)])
         new_shape = tuple(new_pow_tensor.shape[i] for i in range(new_pow_tensor.dim))
         new_pow_data = new_pow_data.reshape(new_shape)
-
-        return Tensor(new_pow_data, _prev=(self, num))
+        ans_tensor = Tensor(new_pow_data)
+        ans_tensor._prev = set((self, num))
+        return ans_tensor
 
     cdef _matmul(self, Tensor other):
 
@@ -402,9 +474,23 @@ cdef class Tensor:
             new_shape = tuple(ans_matmul.shape[i] for i in range(ans_matmul.dim))
             new_matmul_data = new_matmul_data.reshape(new_shape)
 
-            return Tensor(new_matmul_data, _prev=(self, other))
+            ans_tensor = Tensor(new_matmul_data)
+            ans_tensor._prev = set((self, other))
+
+            return ans_tensor
+        else:
+            raise TypeError(f"Unspported type for the matmul: {type(self) or {type(other)}}")
 
     def __repr__(self):
         round_list = np.round(self._item, 4)
         formate_list = pprint.pformat(round_list.tolist())
-        return f"Tensor(Data = {formate_list}, Shape = {self._shape})"
+
+        no_grad_str = f"Tensor(Data = {formate_list}, Shape = {self._shape})"
+        if self._re_grad:
+            if self._name_backward == "":
+                return no_grad_str
+            else:
+                grad_str =  f"Tensor(Data = {formate_list}, GradFunction = {self._name_backward}, Shape = {self._shape})"
+                return grad_str
+
+        return no_grad_str
