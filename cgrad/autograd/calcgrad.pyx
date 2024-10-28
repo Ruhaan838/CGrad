@@ -7,12 +7,21 @@ def add_grad_tensor(tensor1: Tensor, tensor2: Tensor, output: Tensor):
         if tensor1.require_grad:
             if tensor1.grad is None:
                 tensor1.grad = np.zeros_like(output.grad).tolist()
-            tensor1.grad = (np.array(tensor1.grad) + 1.0 * np.array(output.grad)).tolist()
+            output_grad = (np.array(tensor1.grad) + 1.0 * np.array(output.grad))
+            if tensor1.shape == output_grad.shape:
+                tensor1.grad = output_grad.tolist()
+            else:
+                tensor1.grad = (np.sum(output_grad, 0, keepdims=True)).tolist()
 
         if tensor2.require_grad:
             if tensor2.grad is None:
                 tensor2.grad = np.zeros_like(output.grad).tolist()
-            tensor2.grad = (np.array(tensor2.grad) + 1.0 * np.array(output.grad)).tolist()
+            output_grad = (np.array(tensor2.grad) + 1.0 * np.array(output.grad))
+            if tensor2.shape == output_grad.shape:
+                tensor2.grad = output_grad.tolist()
+            else:
+                tensor2.grad = (np.sum(output_grad, 0, keepdims=True)).tolist()
+
     return _backward
 
 #function that caculate the grad for the * oprations
@@ -21,12 +30,20 @@ def mul_grad_tensor(tensor1: Tensor, tensor2: Tensor, output: Tensor):
         if tensor1.require_grad:
             if tensor1.grad is None:
                 tensor1.grad = np.zeros_like(output.grad).tolist()
-            tensor1.grad = (np.array(tensor1.grad) + np.array(tensor2.item) * np.array(output.grad)).tolist()
+            output_grad = (np.array(tensor1.grad) + np.array(tensor2.item) * np.array(output.grad))
+            if tensor1.shape == output_grad.shape:
+                tensor1.grad = output_grad.tolist()
+            else:
+                tensor1.grad = (np.sum(output_grad, 0, keepdims=True)).tolist()
 
         if tensor2.require_grad:
             if tensor2.grad is None:
                 tensor2.grad = np.zeros_like(output.grad).tolist()
-            tensor2.grad = (np.array(tensor2.grad) + np.array(tensor1.item) * np.array(output.grad)).tolist()
+            output_grad = (np.array(tensor2.grad) + np.array(tensor1.item) * np.array(output.grad))
+            if tensor2.shape == output_grad.shape:
+                tensor2.grad = output_grad.tolist()
+            else:
+                tensor2.grad = (np.sum(output_grad, 0, keepdims=True)).tolist()
     return _backward
 
 def matmul_grad_tensor(tensor1: Tensor, tensor2: Tensor, output: Tensor):
