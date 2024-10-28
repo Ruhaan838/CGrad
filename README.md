@@ -3,13 +3,14 @@
 </p>
         
 ## ⏭️🥅 Next goal:
-- [ ] Grad engine
-- [ ] randn Generator
-- [ ] stop use of numpy
+- [x] ~~Grad engine~~ -> new task: matmul autograd. -> scaler part still remaining.
+- [x] ~~randn Generator~~ -> with seed
+- [ ] stop use of numpy -> instead of make our own array like structure.
 - [ ] Build a Tensor for Int, Double, Long, etc. 
-- [ ] Use Fast matrix multiplication algorithm to reduce the time complexity. 
-- [ ] Make loss dir and make loss like "Tenh, ReLU, sigmoid, softmax" in more optimistic way. 
-
+- [ ] Use Fast matrix multiplication algorithm to reduce the time complexity.
+- [ ] Make loss dir and make loss like "Tenh, ReLU, sigmoid, softmax" in more optimistic way. -> make the `loss` folder and also need to make the backward pass for it.
+- [ ] Make Optimizer strat with SGD in C not in pyx (aka cython) -> after SGD -> Adam ...
+      
         
 ## ✨ Overview
 
@@ -94,7 +95,7 @@ x = cgrad.Tensor([2.0, 3.0], requires_grad=True)
 y = cgrad.Tensor([1.0, 4.0], requires_grad=True)
 
 # Performing operations 
-z = x * y + 2.0
+z = x * y
 
 # Backpropagation to compute gradients 
 z.backward()
@@ -111,17 +112,14 @@ For more detailed information, please visit our [documentation website](docs/ind
 ## 🤝 Contributing
 
 I ❤️ contributions! If you’d like to contribute to **CGrad**, please:
-
+```
+You can contribute on code improvement and documantation editing.
+```
+```
+Any issue found, report that it on github issue
+```
 1. 🍴 Clone the repository.
 2. 🌱 Create a new branch for your feature or bugfix.
-3. ✉️ Submit a pull request.
-
-### Contributing to Documentation
-
-We welcome contributions to our documentation! If you’d like to contribute:
-
-1. 🍴 Clone the repository.
-2. 🌱 Create a new branch for your documentation updates.
 3. ✉️ Submit a pull request.
 
 ## 📖 Reading
