@@ -55,7 +55,7 @@ setup(
     packages=find_packages(), 
     package_data={
         'cgrad.Tensor':['cgrad/tensor/Tensorwrapper.pyi'],
-        'cgrad':['cgrad/randoms/random_methos.pyi'],
+        'cgrad':['cgrad/randoms/random_methods.pyi'],
     },
     include_package_data=True,  
     zip_safe=False  
