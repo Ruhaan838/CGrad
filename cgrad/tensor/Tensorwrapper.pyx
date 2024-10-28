@@ -221,7 +221,7 @@ cdef class Tensor:
     def __sub__(self, other):
         """Subtraction of a tensor or scalar from self."""
         if isinstance(other, Tensor):
-            ans = self._add_tensor(other * -1)
+            ans = self._add_tensor(other, sub=True)
             ans.require_grad = self.require_grad or other.require_grad
             ans.__back_init__("<SubBackward>", add_grad_tensor(self, other, ans))
             return ans
@@ -284,7 +284,7 @@ cdef class Tensor:
             Function for devide the two tensor and scaler
         """
         if isinstance(other, Tensor):
-            ans = self._mul_tensor(other ** -1)
+            ans = self._mul_tensor(other, div=True)
             ans.require_grad = self.require_grad or other.require_grad
             ans.__back_init__("<DivBackword>", mul_grad_tensor(self, other, ans))
             return ans
@@ -321,15 +321,19 @@ cdef class Tensor:
     def _slice_data(self, data, indx):
         return Tensor(data[indx])
 
-    cdef _add_tensor(self, Tensor other):
+    cdef _add_tensor(self, Tensor other, sub=False):
         """
         Helper function to add two tensors. Requires both tensors to have the same shape.
         """
-        cdef int* ans = <int*>malloc(sizeof(int));
-        cdef int allow = broadcast_shape(self.tensor, other.tensor, ans)
+
+        cdef int allow = broadcast_shape(self.tensor, other.tensor, NULL)
 
         if allow == -1:
             raise ValueError(f"Shapes of the tensors must be but we found {self._shape} and {other._shape}")
+
+        if sub:
+           for i in range(other.tensor.size):
+               other.tensor.data[i] *= -1
 
         new_add_tensor = add_tensor(self.tensor, other.tensor)
 
@@ -341,6 +345,7 @@ cdef class Tensor:
         new_added_data = new_added_data.reshape(new_shape)
         ans_tensor = Tensor(new_added_data)
         ans_tensor._prev = set((self, other))
+
         return ans_tensor
 
     cdef _add_scalar(self, double scalar):
@@ -366,18 +371,23 @@ cdef class Tensor:
         new_added_data = new_added_data.reshape(new_shape)
         ans_tensor = Tensor(new_added_data)
         ans_tensor._prev = set((self, scalar))
+        free(result_data)
         return ans_tensor
 
-    cdef _mul_tensor(self, Tensor other):
+    cdef _mul_tensor(self, Tensor other, div = False):
         """
         Helper function for ele wise multiplication.
         """
-        cdef int* ans = <int*>malloc(sizeof(int));
-        cdef int allow = broadcast_shape(self.tensor, other.tensor, ans)
+
+        cdef int allow = broadcast_shape(self.tensor, other.tensor, NULL)
 
         if allow == -1:
             raise ValueError(f"Shapes of the tensors must be but we found {self._shape} and {other._shape}")
         
+        if div:
+            for i in range(other.tensor.size):
+                other.tensor.data[i] = other.tensor.data[i] ** -1
+
         new_mul_tensor = mul_ele_tensor(self.tensor, other.tensor)
 
         if new_mul_tensor == NULL:
@@ -389,6 +399,7 @@ cdef class Tensor:
 
         ans_tensor = Tensor(new_mul_data)
         ans_tensor._prev = set((self, other))
+
         return ans_tensor
 
     cdef _mul_scaler(self, double scalar):
@@ -415,14 +426,15 @@ cdef class Tensor:
 
         ans_tensor = Tensor(new_mul_data)
         ans_tensor._prev = set((self, scalar))
+        free(result_data)
         return ans_tensor
 
     cdef _pow_tensor(self, Tensor other):
         """
             Helper function for get the power with other tensor.
         """
-        cdef int* ans = <int*>malloc(sizeof(int));
-        cdef int allow = broadcast_shape(self.tensor, other.tensor, ans)
+
+        cdef int allow = broadcast_shape(self.tensor, other.tensor, NULL)
 
         if allow == -1:
             raise ValueError(f"Shapes of the tensors must be but we found {self._shape} and {other._shape}")

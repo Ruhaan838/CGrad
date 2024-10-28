@@ -98,7 +98,7 @@ class Tensor:
         Function for mutiply the N dim matrix
         internally call the self @ other
     """
-    def backword(self) -> None: ...
+    def backward(self) -> None: ...
     """
         Caculate the backward pass when if require_grad is True
     """
