@@ -49,6 +49,7 @@ int broadcast_shape(FloatTensor* tensor1, FloatTensor* tensor2, int *ans) {
 FloatTensor* init_tensor(float *data, int *shape, int ndim){
     FloatTensor* newtensor = (FloatTensor*)malloc(sizeof(FloatTensor)); // allocate memory for tensor struct
     if (newtensor == NULL){
+        free(newtensor);
         perror("Failed to allocate memory for FloatTensor");
         return NULL;
     }
