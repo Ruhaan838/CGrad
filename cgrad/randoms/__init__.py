@@ -1,2 +1,2 @@
-from .random_methods import rand,randn
-__add__ = ['rand','randn']
+from .random_methods import rand,randrange
+__add__ = ['rand','randrange']
