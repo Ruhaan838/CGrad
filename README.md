@@ -14,7 +14,7 @@
         
 ## ✨ Overview
 
-Lightweight and Efficient library for performing tensor operations. **CGrad** is a module designed to handle all gradient computations, and most matrix manipulation and numerical work generally required for tasks in machine learning and deep learning. 🤖📚
+Lightweight library for performing tensor operations. **CGrad** is a module designed to handle all gradient computations, and most matrix manipulation and numerical work generally required for tasks in machine learning and deep learning. 🤖📚
 
 ## 💡 Features
 
