@@ -25,8 +25,8 @@ FloatTensor* matmulNd(FloatTensor* tensor1, FloatTensor* tensor2){
     
     int* stride1 = (int*)malloc(max_dim * sizeof(int));
     int* stride2 = (int*)malloc(max_dim * sizeof(int));
-    broadcast_stride(tensor1, stride1, max_dim);
-    broadcast_stride(tensor2, stride2, max_dim);
+    broadcast_stride(tensor1->shape, tensor1->stride, stride1, tensor1->dim, max_dim);
+    broadcast_stride(tensor2->shape, tensor2->stride, stride1, tensor2->dim, max_dim);
 
     int outer_size = 1;
     for (int i = 0; i < max_dim - 2; i++) {
