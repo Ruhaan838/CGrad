@@ -24,7 +24,9 @@ Lightweight library for performing tensor operations. **CGrad** is a module desi
 ## ⚙️ Installation
 
 ### For user:
-```bash 
+```bash
+pip install numpy
+pip install cython
 pip install cgrad
 ```
 
