@@ -23,6 +23,12 @@ Lightweight library for performing tensor operations. **CGrad** is a module desi
 
 ## ⚙️ Installation
 
+### For user:
+```bash 
+pip install CGrad==0.1.1 
+```
+
+### For Contributers
 1. [`install MinGW`](https://gcc.gnu.org/install/binaries.html) for **Windows** user install latest MinGW.
 2. [`install gcc`](https://formulae.brew.sh/formula/gcc) for **Mac** or **Linux** user install latest gcc.
 
