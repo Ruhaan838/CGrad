@@ -42,13 +42,15 @@ def rand(shape, require_grad = False):
 
     if not isinstance(shape, (list, tuple)) or not all(isinstance(dim, int) for dim in shape):
         raise TypeError(f"The Shape is only support the type: list and tuple in int from not: {type(shape)}")
-    cdef int* c_shape = <int*>malloc(sizeof(int) * len(shape)) 
+
+    cdef int ndim = len(shape)
+    cdef int seed = randint(0,1000)
+    cdef int* c_shape = <int*>malloc(ndim * sizeof(int)) 
 
     for i in range(len(shape)):
         c_shape[i] = <int>shape[i]
-    seed = randint(0,1000)
-    ndim = len(shape)
-    new_random_tensor = random_tensor_n(c_shape, <int>ndim, <int>seed)
+
+    new_random_tensor = random_tensor_n(c_shape, ndim, seed)
 
     if new_random_tensor == NULL:
         raise MemoryError("Unable to allocate memory for new_random tensor")

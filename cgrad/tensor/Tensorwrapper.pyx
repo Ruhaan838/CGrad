@@ -13,7 +13,7 @@ cdef extern from "../storage/Float_tensor.h":
         int size
         
 cdef extern from "../storage/methods.h":
-    int broadcast_shape(FloatTensor* tensor1, FloatTensor* tensor2, int *ans)
+    int broadcast_shape(int* shape1, int dim1, int* shape2, int dim2, int *ans)
     int matmul_broadcast_shape(int dim1, int dim2, int* shape1, int* shape2, int* shape3);
     FloatTensor* init_tensor(float *data, int *shape, int dim)
     FloatTensor* add_tensor(FloatTensor* tensor1, FloatTensor* tensor2)
@@ -22,6 +22,7 @@ cdef extern from "../storage/methods.h":
     FloatTensor* pow_tensor(FloatTensor* tensor1, float num)
     FloatTensor* matmulNd(FloatTensor* tensor1, FloatTensor* tensor2)
     FloatTensor* transposeNd(FloatTensor* input_tensor)
+    void display_tensor(FloatTensor *tensor)
 
 cdef class Tensor:
     cdef FloatTensor* tensor
@@ -159,7 +160,7 @@ cdef class Tensor:
 
         # Copy data from the Python list to the C array
         for i in range(data_len):
-            c_data[i] = <float>round(data_list[i], 4)
+            c_data[i] = <float>data_list[i]
 
         # Allocate memory for shape
         cdef int shape_len = len(arr_shape)
@@ -332,7 +333,7 @@ cdef class Tensor:
         Helper function to add two tensors. Requires both tensors to have the same shape.
         """
         cdef int* ans = <int*>malloc(self.tensor.dim * sizeof(int))
-        cdef int allow = broadcast_shape(self.tensor, other.tensor, ans)
+        cdef int allow = broadcast_shape(self.tensor.shape, self.tensor.dim, other.tensor.shape, other.tensor.dim, ans)
 
         if allow == -1:
             raise ValueError(f"Shapes of the tensors must be broadcasted but we found {self._shape} and {other._shape}")
@@ -384,9 +385,9 @@ cdef class Tensor:
         """
         Helper function for ele wise multiplication.
         """
-        cdef int* ans = <int*>malloc(self.tensor.dim * sizeof(int))
-        cdef int allow = broadcast_shape(self.tensor, other.tensor, ans)
 
+        cdef int* ans = <int*>malloc(self.tensor.dim * sizeof(int))
+        cdef int allow = broadcast_shape(self.tensor.shape, self.tensor.dim, other.tensor.shape, other.tensor.dim, ans)
         if allow == -1:
             raise ValueError(f"Shapes of the tensors must be broadcasted but we found {self._shape} and {other._shape}")
         
@@ -439,8 +440,8 @@ cdef class Tensor:
         """
             Helper function for get the power with other tensor.
         """
-
-        cdef int allow = broadcast_shape(self.tensor, other.tensor, NULL)
+        cdef int* ans = <int*>malloc(self.tensor.dim * sizeof(int))
+        cdef int allow = broadcast_shape(self.tensor.shape, self.tensor.dim, other.tensor.shape, other.tensor.dim, ans)
 
         if allow == -1:
             raise ValueError(f"Shapes of the tensors must be but we found {self._shape} and {other._shape}")
