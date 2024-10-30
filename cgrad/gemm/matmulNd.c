@@ -48,3 +48,35 @@ FloatTensor* matmulNd(FloatTensor* tensor1, FloatTensor* tensor2){
 
     return result_tensor;
 }
+
+FloatTensor* transposeNd(FloatTensor* input_tensor) {
+    int dim = input_tensor->dim;
+    if (dim < 2) return NULL;
+
+    int* new_shape = (int*)malloc(dim * sizeof(int));
+    for (int i = 0; i < dim - 2; i++) {
+        new_shape[i] = input_tensor->shape[i];
+    }
+    new_shape[dim - 2] = input_tensor->shape[dim - 1];
+    new_shape[dim - 1] = input_tensor->shape[dim - 2];
+
+    int batch_size = 1;
+    for (int i = 0; i < dim - 2; i++) {
+        batch_size *= new_shape[i];
+    }
+    int rows = input_tensor->shape[dim - 2];
+    int cols = input_tensor->shape[dim - 1];
+    int new_size = batch_size * rows * cols;
+
+    float* transposed_data = (float*)malloc(new_size * sizeof(float));
+
+    for (int i = 0; i < batch_size; i++) {
+        float* src_matrix = input_tensor->data + i * rows * cols;
+        float* dst_matrix = transposed_data + i * rows * cols;
+        transpose2d(src_matrix, dst_matrix, rows, cols);
+    }
+
+    FloatTensor* result_tensor = init_tensor(transposed_data, new_shape, dim);
+
+    return result_tensor;
+}
