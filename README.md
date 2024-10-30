@@ -1,7 +1,5 @@
-<p align="center">
-    <image src = "images/logo.png" />
-</p>
-        
+# 🔥 CGrad
+
 ## ⏭️🥅 Next goal:
 - [x] ~~Grad engine~~ -> new task: ~~matmul/div autograd.~~ -> scaler part still remaining.
 - [x] ~~randn Generator~~ -> with seed
