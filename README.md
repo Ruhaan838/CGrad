@@ -3,6 +3,7 @@
 ## ⏭️🥅 Next goal:
 - [x] ~~Grad engine~~ -> new task: ~~matmul/div autograd.~~ -> scaler part still remaining.
 - [x] ~~randn Generator~~ -> with seed
+- [ ] still more operation is remaining on Tensors, add them.
 - [ ] Make the Tensor fast: Check the `tensor.c` and `Tensorwrapper.pyx` files again, and try to optimize them to make them faster.
 - [ ] stop using numpy -> add the reshape, and other stuff.
 - [ ] Build a Tensor for Int, Double, Long, etc. 
@@ -13,7 +14,8 @@
         
 ## ✨ Overview
 
-Lightweight library for performing tensor operations. **CGrad** is a module designed to handle all gradient computations, and most matrix manipulation and numerical work generally required for tasks in machine learning and deep learning. 🤖📚
+Lightweight library for performing tensor operations. **CGrad** is a module designed to handle all gradient computations, and most matrix manipulation and numerical work generally required for tasks in machine learning and deep learning. <br>
+- ####  `Inspired by "Andrej Karpathy's micrograd and George Hotz's tinygrad."`
 
 ## 💡 Features
 
