@@ -3,8 +3,9 @@
 </p>
         
 ## ⏭️🥅 Next goal:
-- [x] ~~Grad engine~~ -> new task: matmul/div autograd. -> scaler part still remaining.
+- [x] ~~Grad engine~~ -> new task: ~~matmul/div autograd.~~ -> scaler part still remaining.
 - [x] ~~randn Generator~~ -> with seed
+- [ ] Make the Tensor fast: check again the `tensor.c` and `Tensorwrapper.pyx` files. try to optimize that and make it faster.
 - [ ] stop use of numpy -> instead of make our own array like structure.
 - [ ] Build a Tensor for Int, Double, Long, etc. 
 - [ ] Use Fast matrix multiplication algorithm to reduce the time complexity.
