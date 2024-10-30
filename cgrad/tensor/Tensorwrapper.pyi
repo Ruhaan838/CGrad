@@ -66,7 +66,7 @@ class Tensor:
     def ndim(self) -> int: ...
     
     @property
-    def grad(self, value : List[int] | List[float] | Tensor) -> List[float]: ...
+    def grad(self, value:Tensor) -> Tensor: ...
     @property
     def require_grad(): ...
     
@@ -111,6 +111,10 @@ class Tensor:
     """
         Function for mutiply the N dim matrix
         internally call the self @ other
+    """
+    def transpose(self) -> Tensor: ...
+    """
+        Transpose the tensor for all batch.
     """
     def backward(self) -> None: ...
     """

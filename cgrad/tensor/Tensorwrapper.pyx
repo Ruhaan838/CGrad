@@ -2,7 +2,7 @@
 from libc.stdlib cimport malloc, free
 import numpy as np
 import pprint
-from cgrad.autograd.calcgrad import add_grad_tensor, mul_grad_tensor, div_grad_tensor, backward_node
+from cgrad.autograd.calcgrad import add_grad_tensor, mul_grad_tensor, div_grad_tensor, matmul_grad_tensor, backward_node
 
 cdef extern from "../storage/Float_tensor.h":
     ctypedef struct FloatTensor:
@@ -21,6 +21,7 @@ cdef extern from "../storage/methods.h":
     FloatTensor* pow_two_tensor(FloatTensor* tensor1, FloatTensor* tensor2)
     FloatTensor* pow_tensor(FloatTensor* tensor1, float num)
     FloatTensor* matmulNd(FloatTensor* tensor1, FloatTensor* tensor2)
+    FloatTensor* transposeNd(FloatTensor* input_tensor)
 
 cdef class Tensor:
     cdef FloatTensor* tensor
@@ -139,6 +140,9 @@ cdef class Tensor:
     
     def matmul(self, other):
         return self @ other
+
+    def transpose(self):
+        return self._transpose_nd()
 
     cdef void __convert_and_init(self, data_list: list, arr_shape: tuple):
         """
@@ -314,6 +318,8 @@ cdef class Tensor:
         """
         if isinstance(other, Tensor):
             ans = self._matmul(other)
+            ans.require_grad = self.require_grad or other.require_grad
+            ans.__back_init__("<MatMulBackword>", matmul_grad_tensor(self, other, ans))
             return ans
         else:
             raise TypeError(f"Unspport type for matrix multiplication {type(other)}")
@@ -493,6 +499,22 @@ cdef class Tensor:
         else:
             raise TypeError(f"Unspported type for the matmul: {type(self) or {type(other)}}")
 
+    cdef _transpose_nd(self):
+
+        if not isinstance(self, Tensor):
+            raise TypeError(f"Unsppoted type for the transpose: {type(self)}")
+
+        ans_tesnor = transposeNd(self.tensor)
+
+        if ans_tesnor == NULL:
+            raise Exception(f"Can't transpose the shape: {self.shape}")
+        
+        new_ans_data = np.array([ans_tesnor.data[i] for i in range(ans_tesnor.size)])
+        new_shape = tuple(ans_tesnor.shape[i] for i in range(ans_tesnor.dim))
+        new_ans_data = new_ans_data.reshape(new_shape)
+
+        return Tensor(new_ans_data)
+
     def __repr__(self):
         round_list = np.round(self._item, 4)
         formate_list = pprint.pformat(round_list.tolist())
@@ -507,4 +529,6 @@ cdef class Tensor:
                 return grad_str
         else:
             return f"Tensor(Data = {formate_list}, Shape = {self._shape})"
+
+    
 
