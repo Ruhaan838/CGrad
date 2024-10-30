@@ -8,11 +8,10 @@ def init_grad(tensor: Tensor, output_shape):
 
 def accumulate_grad(tensor: Tensor, grad_increment):
     """Accumulates the gradient increment into the tensor's gradient."""
-    output_grad = (np.array(tensor.grad.item) + grad_increment)
-    if tensor.shape == output_grad.shape:
-        tensor.grad = Tensor(output_grad.tolist())
-    else:
-        tensor.grad = Tensor(np.sum(output_grad, axis=0, keepdims=True).tolist())
+    grad_increment.require_grad = False
+    if tensor.grad.shape != grad_increment.shape:
+        grad_increment = Tensor(np.sum(grad_increment.item, axis=tuple(range(grad_increment.ndim - tensor.grad.ndim))).tolist())
+    tensor.grad = tensor.grad + grad_increment
 
 #function that caculate the grad for the + oprations
 ## c = a + b -> dc/da = 1; dc/db = 1
@@ -20,11 +19,11 @@ def add_grad_tensor(tensor1: Tensor, tensor2: Tensor, output: Tensor):
     def _backward():
         if tensor1.require_grad:
             init_grad(tensor1, output.shape)
-            accumulate_grad(tensor1, np.array(output.grad.item))
+            accumulate_grad(tensor1, output.grad)
 
         if tensor2.require_grad:
             init_grad(tensor2, output.shape)
-            accumulate_grad(tensor2, np.array(output.grad.item))
+            accumulate_grad(tensor2, output.grad)
 
     return _backward
 
@@ -34,33 +33,46 @@ def mul_grad_tensor(tensor1: Tensor, tensor2: Tensor, output: Tensor):
     def _backward():
         if tensor1.require_grad:
             init_grad(tensor1, output.shape)
-            grad_increment = np.array(tensor2.item) * np.array(output.grad.item)
+            grad_increment = tensor2 * output.grad
             accumulate_grad(tensor1, grad_increment)
 
         if tensor2.require_grad:
             init_grad(tensor2, output.shape)
-            grad_increment = np.array(tensor1.item) * np.array(output.grad.item)
+            grad_increment = tensor1 * output.grad
             accumulate_grad(tensor2, grad_increment)
 
     return _backward
 
+#function that caculate the grad for the / oprations
 # c = a / b -> dc/da = 1 / b; dc/db = -(a / b**2)
 def div_grad_tensor(tensor1: Tensor, tensor2: Tensor, output: Tensor):
     def _backward():
         if tensor1.require_grad:
             init_grad(tensor1, output.shape)
-            grad_increment = (1 / np.array(tensor2.item)) * np.array(output.grad.item)
+            grad_increment = (1 / tensor2) * output.grad
             accumulate_grad(tensor1, grad_increment)
 
         if tensor2.require_grad:
             init_grad(tensor2, output.shape)
-            dt_do = (-np.array(tensor1.item) / np.array(tensor2.item) ** 2) * np.array(output.grad.item)
+            dt_do = (-1 * tensor1 / tensor2 ** 2) * output.grad
             accumulate_grad(tensor2, dt_do)
 
     return _backward
 
+#function that caculate the grad for the @ oprations
 def matmul_grad_tensor(tensor1: Tensor, tensor2: Tensor, output: Tensor):
-    pass
+    def _backward():
+        if tensor1.require_grad:
+            init_grad(tensor1, tensor1.shape)
+            grad_increment = output.grad @ tensor2.transpose()
+            accumulate_grad(tensor1, grad_increment)
+
+        if tensor2.require_grad:
+            init_grad(tensor2, tensor2.shape)
+            grad_increment = tensor1.transpose() @ output.grad
+            accumulate_grad(tensor2, grad_increment)
+
+    return _backward
 
 #helper function that do backword
 def topo_sort_backward_pass_helper(v: Tensor, topo:list, visited:set):
