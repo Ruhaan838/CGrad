@@ -40,7 +40,7 @@ setup(
     url="https://github.com/Ruhaan838/CGrad", 
     ext_modules=cythonize(ext_modules, annotate=True), 
     license="MIT",  
-    install_requires=["numpy"], 
+    install_requires=["numpy","cython"], 
     package_dir={'': '.'},  
     packages=find_packages(), 
     package_data={
