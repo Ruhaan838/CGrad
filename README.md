@@ -10,7 +10,7 @@
 - [ ] Build a Tensor for Int, Double, Long, etc. 
 - [ ] Use the Fast matrix multiplication algorithm to reduce the time complexity.
 - [ ] Make loss dir and make loss like "Tenh, ReLU, sigmoid, softmax" in a more optimistic way. -> Make the `loss` folder, but you also need to make the backward pass for it.
-- [ ] Make Optimizer strat with SGD in C not in pyx (aka cython) -> after SGD -> Adam ...
+- [ ] Make Optimizer start with SGD in C not in pyx (aka cython) -> after SGD -> Adam ...
       
         
 ## ✨ Overview
