@@ -5,11 +5,11 @@
 ## ⏭️🥅 Next goal:
 - [x] ~~Grad engine~~ -> new task: ~~matmul/div autograd.~~ -> scaler part still remaining.
 - [x] ~~randn Generator~~ -> with seed
-- [ ] Make the Tensor fast: check again the `tensor.c` and `Tensorwrapper.pyx` files. try to optimize that and make it faster.
-- [ ] stop use of numpy -> instead of make our own array like structure.
+- [ ] Make the Tensor fast: Check the `tensor.c` and `Tensorwrapper.pyx` files again, and try to optimize them to make them faster.
+- [ ] stop using numpy -> add the reshape, and other stuff.
 - [ ] Build a Tensor for Int, Double, Long, etc. 
-- [ ] Use Fast matrix multiplication algorithm to reduce the time complexity.
-- [ ] Make loss dir and make loss like "Tenh, ReLU, sigmoid, softmax" in more optimistic way. -> make the `loss` folder and also need to make the backward pass for it.
+- [ ] Use the Fast matrix multiplication algorithm to reduce the time complexity.
+- [ ] Make loss dir and make loss like "Tenh, ReLU, sigmoid, softmax" in a more optimistic way. -> Make the `loss` folder, but you also need to make the backward pass for it.
 - [ ] Make Optimizer strat with SGD in C not in pyx (aka cython) -> after SGD -> Adam ...
       
         
@@ -114,10 +114,10 @@ For more detailed information, please visit our [documentation website](docs/ind
 
 I ❤️ contributions! If you’d like to contribute to **CGrad**, please:
 ```
-You can contribute on code improvement and documantation editing.
+You can contribute to code improvement and documentation editing.
 ```
 ```
-Any issue found, report that it on github issue
+If any issue is found, report it on the GitHub issue
 ```
 1. 🍴 Clone the repository.
 2. 🌱 Create a new branch for your feature or bugfix.
@@ -125,7 +125,7 @@ Any issue found, report that it on github issue
 
 ## 📖 Reading
 
-- Blog about how tensor work at computer level.
+- Blog about how tensors work at the computer level.
 [[link](http://blog.ezyang.com/2019/05/pytorch-internals/)]
 - Cython Documentation. [[link](https://cython.readthedocs.io/en/latest/src/userguide/language_basics.html)]
 
