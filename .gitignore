@@ -17,3 +17,4 @@
 .pytest_cache
 /examples/temp.py
 /.idea
+/dist

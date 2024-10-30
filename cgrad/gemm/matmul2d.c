@@ -57,3 +57,10 @@ void matmul2d(float* data1, float* data2, float* ans_data, int I_shape, int K_sh
     }
 }
 
+void transpose2d(float* src_matrix, float* dst_matrix, int rows, int cols) {
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            dst_matrix[j * rows + i] = src_matrix[i * cols + j];
+        }
+    }
+}

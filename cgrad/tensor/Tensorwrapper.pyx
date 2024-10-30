@@ -2,7 +2,7 @@
 from libc.stdlib cimport malloc, free
 import numpy as np
 import pprint
-from cgrad.autograd.calcgrad import add_grad_tensor, mul_grad_tensor, backward_node
+from cgrad.autograd.calcgrad import add_grad_tensor, mul_grad_tensor, div_grad_tensor, matmul_grad_tensor, backward_node
 
 cdef extern from "../storage/Float_tensor.h":
     ctypedef struct FloatTensor:
@@ -21,6 +21,7 @@ cdef extern from "../storage/methods.h":
     FloatTensor* pow_two_tensor(FloatTensor* tensor1, FloatTensor* tensor2)
     FloatTensor* pow_tensor(FloatTensor* tensor1, float num)
     FloatTensor* matmulNd(FloatTensor* tensor1, FloatTensor* tensor2)
+    FloatTensor* transposeNd(FloatTensor* input_tensor)
 
 cdef class Tensor:
     cdef FloatTensor* tensor
@@ -29,7 +30,7 @@ cdef class Tensor:
     cdef int _ndim
     cdef set _prev
     cdef bint _re_grad #require_grad
-    cdef list _grad
+    cdef Tensor _grad
     cdef object _backward_pass  #for store the function
     cdef str _name_backward
 
@@ -70,7 +71,7 @@ cdef class Tensor:
         self._ndim = dim
         self._re_grad = require_grad
 
-        self._grad = np.zeros(arr.shape).tolist()
+        self._grad = None
         self._backward_pass = lambda: None
         self._name_backward = ""
 
@@ -103,13 +104,13 @@ cdef class Tensor:
 
     @grad.setter
     def grad(self, value):
-        if isinstance(value, Tensor):
-            self._grad = value.item
-        elif isinstance(value, list):
-            self._grad = value 
+        if self.require_grad:
+            if isinstance(value, Tensor):
+                self._grad = value
+            else:
+                raise ValueError("Unsported the grad type")
         else:
-            raise ValueError("Unsported the grad type")
-            
+            raise AttributeError("The require_grad is must True for set the grad.")
     @property
     def prev(self):
         return self._prev
@@ -139,6 +140,9 @@ cdef class Tensor:
     
     def matmul(self, other):
         return self @ other
+
+    def transpose(self):
+        return self._transpose_nd()
 
     cdef void __convert_and_init(self, data_list: list, arr_shape: tuple):
         """
@@ -202,7 +206,7 @@ cdef class Tensor:
             return ans
         elif isinstance(other, (int, float)):
             ans = self._add_scalar(other)
-            ans.require_grad = self.require_grad
+            ans.require_grad = self.require_grad or other.require_grad
             return ans
         else:
             raise TypeError(f"Unsupported type for addition: {type(other)}")
@@ -286,7 +290,7 @@ cdef class Tensor:
         if isinstance(other, Tensor):
             ans = self._mul_tensor(other, div=True)
             ans.require_grad = self.require_grad or other.require_grad
-            ans.__back_init__("<DivBackword>", mul_grad_tensor(self, other, ans))
+            ans.__back_init__("<DivBackword>", div_grad_tensor(self, other, ans))
             return ans
 
         elif isinstance(other, (int, float)):
@@ -314,6 +318,8 @@ cdef class Tensor:
         """
         if isinstance(other, Tensor):
             ans = self._matmul(other)
+            ans.require_grad = self.require_grad or other.require_grad
+            ans.__back_init__("<MatMulBackword>", matmul_grad_tensor(self, other, ans))
             return ans
         else:
             raise TypeError(f"Unspport type for matrix multiplication {type(other)}")
@@ -325,11 +331,11 @@ cdef class Tensor:
         """
         Helper function to add two tensors. Requires both tensors to have the same shape.
         """
-
-        cdef int allow = broadcast_shape(self.tensor, other.tensor, NULL)
+        cdef int* ans = <int*>malloc(self.tensor.dim * sizeof(int))
+        cdef int allow = broadcast_shape(self.tensor, other.tensor, ans)
 
         if allow == -1:
-            raise ValueError(f"Shapes of the tensors must be but we found {self._shape} and {other._shape}")
+            raise ValueError(f"Shapes of the tensors must be broadcasted but we found {self._shape} and {other._shape}")
 
         if sub:
            for i in range(other.tensor.size):
@@ -378,11 +384,11 @@ cdef class Tensor:
         """
         Helper function for ele wise multiplication.
         """
-
-        cdef int allow = broadcast_shape(self.tensor, other.tensor, NULL)
+        cdef int* ans = <int*>malloc(self.tensor.dim * sizeof(int))
+        cdef int allow = broadcast_shape(self.tensor, other.tensor, ans)
 
         if allow == -1:
-            raise ValueError(f"Shapes of the tensors must be but we found {self._shape} and {other._shape}")
+            raise ValueError(f"Shapes of the tensors must be broadcasted but we found {self._shape} and {other._shape}")
         
         if div:
             for i in range(other.tensor.size):
@@ -493,16 +499,36 @@ cdef class Tensor:
         else:
             raise TypeError(f"Unspported type for the matmul: {type(self) or {type(other)}}")
 
+    cdef _transpose_nd(self):
+
+        if not isinstance(self, Tensor):
+            raise TypeError(f"Unsppoted type for the transpose: {type(self)}")
+
+        ans_tesnor = transposeNd(self.tensor)
+
+        if ans_tesnor == NULL:
+            raise Exception(f"Can't transpose the shape: {self.shape}")
+        
+        new_ans_data = np.array([ans_tesnor.data[i] for i in range(ans_tesnor.size)])
+        new_shape = tuple(ans_tesnor.shape[i] for i in range(ans_tesnor.dim))
+        new_ans_data = new_ans_data.reshape(new_shape)
+
+        return Tensor(new_ans_data)
+
     def __repr__(self):
         round_list = np.round(self._item, 4)
         formate_list = pprint.pformat(round_list.tolist())
 
-        no_grad_str = f"Tensor(Data = {formate_list}, Shape = {self._shape})"
+        
         if self._re_grad:
             if self._name_backward == "":
-                return no_grad_str
+                
+                return f"Tensor(Data = {formate_list}, require_grad = {self._re_grad}, Shape = {self._shape})"
             else:
                 grad_str =  f"Tensor(Data = {formate_list}, GradFunction = {self._name_backward}, Shape = {self._shape})"
                 return grad_str
+        else:
+            return f"Tensor(Data = {formate_list}, Shape = {self._shape})"
 
-        return no_grad_str
+    
+
