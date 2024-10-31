@@ -1,10 +1,11 @@
 from cgrad.tensor.Tensorwrapper import Tensor
+from cgrad.optium.basic_ops import ones
 import numpy as np
 
 def init_grad(tensor: Tensor, output_shape):
     """Initializes the gradient for the tensor if it is None."""
     if tensor.grad is None:
-        tensor.grad = Tensor(np.zeros(output_shape).tolist())
+        tensor.grad = ones(output_shape)
 
 def accumulate_grad_matmul(tensor: Tensor, grad_increment):
     """Accumulates the gradient increment into the tensor's gradient."""
@@ -82,23 +83,3 @@ def matmul_grad_tensor(tensor1: Tensor, tensor2: Tensor, output: Tensor):
 
     return _backward
 
-#helper function that do backword
-def topo_sort_backward_pass_helper(v: Tensor, topo:list, visited:set):
-    if v not in visited:
-        visited.add(v)
-        for child in v.prev:
-            topo_sort_backward_pass_helper(child, topo, visited)
-        topo.append(v)
-
-#caculate the backword pass
-def backward_node(out: Tensor):
-    if out.grad == None:
-        out.grad = Tensor(np.ones(out.shape).tolist())
-    
-    topo = []
-    visited = set()
-    
-    topo_sort_backward_pass_helper(out, topo, visited)
-
-    for node in reversed(topo):
-        node._backward()

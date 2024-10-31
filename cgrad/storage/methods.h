@@ -28,4 +28,8 @@ FloatTensor* transposeNd(FloatTensor* input_tensor);
 //random number methods
 FloatTensor* random_tensor(int *shape, int ndim,int min, int max, int seed);
 FloatTensor* random_tensor_n(int *shape, int ndim, int seed);
+
+//ones and zeros
+FloatTensor* zeros_tensor(int *shape, int ndim);
+FloatTensor* ones_tensor(int *shape, int ndim);
 #endif

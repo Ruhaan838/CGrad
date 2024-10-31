@@ -2,7 +2,8 @@
 from libc.stdlib cimport malloc, free
 import numpy as np
 import pprint
-from cgrad.autograd.calcgrad import add_grad_tensor, mul_grad_tensor, div_grad_tensor, matmul_grad_tensor, backward_node
+from cgrad.autograd.grad_funcs import add_grad_tensor, mul_grad_tensor, div_grad_tensor, matmul_grad_tensor
+from cgrad.autograd.graph import BackwardGraph
 
 cdef extern from "../storage/Float_tensor.h":
     ctypedef struct FloatTensor:
@@ -63,7 +64,7 @@ cdef class Tensor:
         data = arr.reshape(-1) 
         data_list = data.tolist()  
 
-        self.__convert_and_init(data_list, arr_shape) 
+        self.convert_and_init(data_list, arr_shape) 
 
         #some acceable attributes
         self._prev = set() 
@@ -122,7 +123,7 @@ cdef class Tensor:
     def backward(self):
         if not self._re_grad:
             raise AttributeError("Please set require_grad=True to calculate the gradient.")
-        return backward_node(self)
+        return BackwardGraph.execute(self)
 
     def add(self,other):
         return self + other
@@ -145,7 +146,7 @@ cdef class Tensor:
     def transpose(self):
         return self._transpose_nd()
 
-    cdef void __convert_and_init(self, data_list: list, arr_shape: tuple):
+    cdef void convert_and_init(self, data_list: list, arr_shape: tuple):
         """
         This function converts Python data_list and arr_shape into C types
         and initializes the FloatTensor using init_tensor.
@@ -530,6 +531,3 @@ cdef class Tensor:
                 return grad_str
         else:
             return f"Tensor(Data = {formate_list}, Shape = {self._shape})"
-
-    
-
