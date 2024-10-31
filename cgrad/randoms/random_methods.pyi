@@ -1,6 +1,0 @@
-from typing import List, Tuple, Optional
-from cgrad.tensor.Tensorwrapper import Tensor
-
-def rand(shape: List[int] | Tuple[int], require_grad:Optional[bool]) -> Tensor: ...
-def randrange(shape: List[int] | Tuple[int], require_grad:Optional[bool], min:Optional[int], max:Optional[int]) -> Tensor: ...
-
