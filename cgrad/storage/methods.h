@@ -20,6 +20,7 @@ FloatTensor* add_tensor(FloatTensor* tensor1, FloatTensor* tensor2);
 FloatTensor* mul_ele_tensor(FloatTensor* tensor1, FloatTensor* tensor2);
 FloatTensor* pow_tensor(FloatTensor* tenosr1, float num);
 FloatTensor* pow_two_tensor(FloatTensor* tensor1, FloatTensor* tenso2);
+FloatTensor* sum_tensor(FloatTensor* input_tensor, int axis, int keepdims);
 
 // matrix
 FloatTensor* matmulNd(FloatTensor* tensor1, FloatTensor* tensor2);

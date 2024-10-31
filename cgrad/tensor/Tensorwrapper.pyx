@@ -23,6 +23,7 @@ cdef extern from "../storage/methods.h":
     FloatTensor* pow_tensor(FloatTensor* tensor1, float num)
     FloatTensor* matmulNd(FloatTensor* tensor1, FloatTensor* tensor2)
     FloatTensor* transposeNd(FloatTensor* input_tensor)
+    FloatTensor* sum_tensor(FloatTensor* input_tensor, int axis, int keepdims)
     void display_tensor(FloatTensor *tensor)
 
 cdef class Tensor:
@@ -145,6 +146,9 @@ cdef class Tensor:
 
     def transpose(self):
         return self._transpose_nd()
+
+    def sum(self, axis=-1, keepdims=False):
+        return self.sum_t(axis, keepdims)
 
     cdef void convert_and_init(self, data_list: list, arr_shape: tuple):
         """
@@ -516,6 +520,22 @@ cdef class Tensor:
         new_ans_data = new_ans_data.reshape(new_shape)
 
         return Tensor(new_ans_data)
+    
+    cdef Tensor sum_t(self, axis, keepdims):
+        
+        if not isinstance(axis, int) or not isinstance(keepdims, bool):
+            raise f"Unspported type for axis {type(axis)} and keepdims {type(keepdims)}"
+
+        cdef FloatTensor* result_tensor = sum_tensor(self.tensor, axis, keepdims)
+
+        if result_tensor == NULL:
+            raise MemoryError("Unable to allocate memory for result tensor")
+
+        result_data = np.array([result_tensor.data[i] for i in range(result_tensor.size)])
+        result_shape = tuple(result_tensor.shape[i] for i in range(result_tensor.dim))
+        result_data = result_data.reshape(result_shape)
+        
+        return Tensor(result_data, require_grad=self.require_grad)
 
     def __repr__(self):
         round_list = np.round(self._item, 4)

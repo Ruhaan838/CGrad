@@ -120,3 +120,7 @@ class Tensor:
     """
         Caculate the backward pass when if require_grad is True
     """
+    def sum(self, axis:int=-1, keepdims:Optional[bool]=False)-> Tensor: ...
+    """
+        Sum the over the axis with checkof keepdims.
+    """

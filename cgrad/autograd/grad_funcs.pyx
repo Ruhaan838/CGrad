@@ -1,26 +1,29 @@
 from cgrad.tensor.Tensorwrapper import Tensor
-from cgrad.optium.basic_ops import ones
+from cgrad.optium.basic_ops import zeros
 import numpy as np
 
 def init_grad(tensor: Tensor, output_shape):
     """Initializes the gradient for the tensor if it is None."""
     if tensor.grad is None:
-        tensor.grad = ones(output_shape)
+        tensor.grad = zeros(output_shape, require_grad=False)
 
 def accumulate_grad_matmul(tensor: Tensor, grad_increment):
     """Accumulates the gradient increment into the tensor's gradient."""
     grad_increment.require_grad = False
+    tensor.grad.require_grad = False
     if tensor.grad.shape != grad_increment.shape:
         grad_increment = Tensor(np.sum(grad_increment.item, axis=tuple(range(grad_increment.ndim - tensor.grad.ndim))).tolist())
     tensor.grad = tensor.grad + grad_increment
 
 def accumulate_grad(tensor:Tensor, grad_increment):
     """Accumulates the gradient"""
+    grad_increment.require_grad = False
+    tensor.grad.require_grad = False
     output_grad = (tensor.grad) + grad_increment
     if tensor.shape == output_grad.shape:
         tensor.grad = output_grad
     else:
-        tensor.grad = Tensor(np.sum(output_grad.item, axis=0, keepdims=True).tolist())
+        tensor.grad = output_grad.sum(axis=0, keepdims=True)
 
 #function that caculate the grad for the + oprations
 ## c = a + b -> dc/da = 1; dc/db = 1
@@ -82,4 +85,3 @@ def matmul_grad_tensor(tensor1: Tensor, tensor2: Tensor, output: Tensor):
             accumulate_grad_matmul(tensor2, grad_increment)
 
     return _backward
-
