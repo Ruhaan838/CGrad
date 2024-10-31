@@ -1,6 +1,6 @@
 from cgrad.tensor.Tensorwrapper import Tensor
 import numpy as np
-from libc.stdlib cimport malloc
+from libc.stdlib cimport malloc, free
 import time
 from random import randint
 
@@ -37,7 +37,7 @@ def randrange(shape, require_grad = False, min=0, max=10000):
     new_random_data = np.array([new_random_tensor.data[i] for i in range(new_random_tensor.size)])
     new_shape = tuple(new_random_tensor.shape[i] for i in range(new_random_tensor.dim))
     new_random_data = new_random_data.reshape(new_shape)
-
+    free(c_shape)
     return Tensor(new_random_data, require_grad = require_grad)
 
 def rand(shape, require_grad = False):
@@ -60,7 +60,7 @@ def rand(shape, require_grad = False):
     new_random_data = np.array([round(new_random_tensor.data[i], 4) for i in range(new_random_tensor.size)])
     new_shape = tuple(new_random_tensor.shape[i] for i in range(new_random_tensor.dim))
     new_random_data = new_random_data.reshape(new_shape)
-
+    free(c_shape)
     return Tensor(new_random_data, require_grad = require_grad)
 
 def zeros(shape, require_grad = False):
@@ -82,7 +82,7 @@ def zeros(shape, require_grad = False):
     new_zeros_data = np.array([new_zeros_tensor.data[i] for i in range(new_zeros_tensor.size)])
     new_shape = tuple(new_zeros_tensor.shape[i] for i in range(new_zeros_tensor.dim))
     new_zeros_data = new_zeros_data.reshape(new_shape)
-
+    free(c_shape)
     return Tensor(new_zeros_data, require_grad=require_grad)
 
 def ones(shape, require_grad = False):
@@ -104,4 +104,5 @@ def ones(shape, require_grad = False):
     new_shape = tuple(new_ones_tensor.shape[i] for i in range(new_ones_tensor.dim))
     new_ones_data = new_ones_data.reshape(new_shape)
 
+    free(c_shape)
     return Tensor(new_ones_data, require_grad=require_grad)
