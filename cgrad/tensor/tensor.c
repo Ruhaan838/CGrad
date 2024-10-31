@@ -231,6 +231,54 @@ FloatTensor* pow_two_tensor(FloatTensor* tensor1, FloatTensor* tensor2) {
     return result;
 }
 
+
+FloatTensor* sum_tensor(FloatTensor* input_tensor, int axis, int keepdims) {
+    int i, j, k;
+    int ndim = input_tensor->dim;
+    int* shape = input_tensor->shape;
+    
+    int new_ndim = keepdims ? ndim : ndim - 1;
+    int* new_shape = (int*)malloc(new_ndim * sizeof(int));
+    int result_size = 1;
+
+    for (i = 0, k = 0; i < ndim; i++) {
+        if (i == axis) {
+            if (keepdims) new_shape[k++] = 1;
+        } else {
+            new_shape[k++] = shape[i];
+            result_size *= shape[i];
+        }
+    }
+
+    float* result_data = (float*)malloc(result_size * sizeof(float));
+    if (!result_data) return NULL;
+
+    for (i = 0; i < result_size; i++) result_data[i] = 0.0;
+
+    int outer_size = 1, inner_size = 1;
+    for (i = 0; i < axis; i++) outer_size *= shape[i];
+    for (i = axis + 1; i < ndim; i++) inner_size *= shape[i];
+
+    for (i = 0; i < outer_size; i++) {
+        for (j = 0; j < shape[axis]; j++) {
+            for (k = 0; k < inner_size; k++) {
+                int input_index = i * shape[axis] * inner_size + j * inner_size + k;
+                int result_index = i * inner_size + k;
+                result_data[result_index] += input_tensor->data[input_index];
+            }
+        }
+    }
+
+    FloatTensor* result_tensor = init_tensor(result_data, new_shape, new_ndim);
+    if (!result_tensor) {
+        free(result_data);
+        free(new_shape);
+        return NULL;
+    }
+
+    return result_tensor;
+}
+
 void display_tensor(FloatTensor *tensor){
     printf("Tensor [data = (");
     for (int i = 0; i < tensor->size; i++){
