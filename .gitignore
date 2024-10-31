@@ -1,20 +1,19 @@
 /build
 /cgrad/__pycache__
 /cgrad/tensor/__pycache__
-cgrad/randoms/__pycache__
+/cgrad/optium/__pycache__
 
 /cgrad/tensor/Tensorwrapper.cp312-win_amd64.pyd
-/cgrad/randoms/random_methods.cp312-win_amd64.pyd
 
 /cgrad/tensor/Tensorwrapper.cpython-312-darwin.so
 /cgrad/tensor/Tensorwrapper.cpython-312-x86_64-linux-gnu.so
-/cgrad/randoms/random_methods.cpython-312-darwin.so
+/cgrad/optium/basic_ops.cpython-312-darwin.so
 /cgrad/autograd/calcgrad.cpython-312-darwin.so
 /cgrad/autograd/graph.cpython-312-darwin.so
 /cgrad/autograd/grad_funcs.cpython-312-darwin.so
 
 /cgrad/tensor/Tensorwrapper.c
-/cgrad/randoms/random_methods.c
+/cgrad/optium/basic_ops.c
 /cgrad/autograd/calcgrad.c
 /cgrad/autograd/grad_funcs.c
 /cgrad/autograd/graph.c
@@ -23,8 +22,8 @@ cgrad/randoms/__pycache__
 /cgrad/autograd/grad_funcs.html
 /cgrad/autograd/graph.html
 /cgrad/tensor/Tensorwrapper.html
-/cgrad/randoms/random_methods.html
 /cgrad/autograd/calcgrad.html
+/cgrad/optium/basic_ops.html
 
 
 /CGrad.egg-info
