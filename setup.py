@@ -21,9 +21,16 @@ ext_modules = [
         include_dirs=[numpy.get_include()]
     ),
     Extension(
-        "cgrad.autograd.calcgrad",
+        "cgrad.autograd.grad_funcs",
         sources=[
-            'cgrad/autograd/calcgrad.pyx'
+            'cgrad/autograd/grad_funcs.pyx',
+        ],
+        include_dirs=[numpy.get_include()]
+    ),
+    Extension(
+        "cgrad.autograd.graph",
+        sources=[
+            'cgrad/autograd/graph.pyx'
         ],
         include_dirs=[numpy.get_include()]
     )
