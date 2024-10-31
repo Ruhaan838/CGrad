@@ -2,7 +2,8 @@
 from libc.stdlib cimport malloc, free
 import numpy as np
 import pprint
-from cgrad.autograd.calcgrad import add_grad_tensor, mul_grad_tensor, div_grad_tensor, matmul_grad_tensor, backward_node
+from cgrad.autograd.grad_funcs import add_grad_tensor, mul_grad_tensor, div_grad_tensor, matmul_grad_tensor
+from cgrad.autograd.graph import BackwardGraph
 
 cdef extern from "../storage/Float_tensor.h":
     ctypedef struct FloatTensor:
@@ -122,7 +123,7 @@ cdef class Tensor:
     def backward(self):
         if not self._re_grad:
             raise AttributeError("Please set require_grad=True to calculate the gradient.")
-        return backward_node(self)
+        return BackwardGraph.execute(self)
 
     def add(self,other):
         return self + other
