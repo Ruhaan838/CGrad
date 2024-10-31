@@ -77,6 +77,9 @@ FloatTensor* transposeNd(FloatTensor* input_tensor) {
     }
 
     FloatTensor* result_tensor = init_tensor(transposed_data, new_shape, dim);
+    
+    free(transposed_data);
+    free(new_shape);
 
     return result_tensor;
 }

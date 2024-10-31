@@ -1,6 +1,7 @@
 /build
 /cgrad/__pycache__
 /cgrad/tensor/__pycache__
+cgrad/randoms/__pycache__
 
 /cgrad/tensor/Tensorwrapper.cp312-win_amd64.pyd
 /cgrad/randoms/random_methods.cp312-win_amd64.pyd
