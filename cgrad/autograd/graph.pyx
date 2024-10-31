@@ -1,4 +1,5 @@
 from cgrad.tensor.Tensorwrapper import Tensor
+from cgrad.optium.basic_ops import ones
 import numpy as np
 
 cdef class BackwardGraph:
@@ -19,7 +20,7 @@ cdef class BackwardGraph:
                 topo.append(node)
         
         if output.grad is None:
-            output.grad = Tensor(np.ones(output.shape).tolist())
+            output.grad = ones(output.shape)
         
         topo_sort_helper(output)
         

@@ -1,10 +1,11 @@
 from cgrad.tensor.Tensorwrapper import Tensor
+from cgrad.optium.basic_ops import ones
 import numpy as np
 
 def init_grad(tensor: Tensor, output_shape):
     """Initializes the gradient for the tensor if it is None."""
     if tensor.grad is None:
-        tensor.grad = Tensor(np.zeros(output_shape).tolist())
+        tensor.grad = ones(output_shape)
 
 def accumulate_grad_matmul(tensor: Tensor, grad_increment):
     """Accumulates the gradient increment into the tensor's gradient."""
