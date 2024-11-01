@@ -4,7 +4,7 @@
 - [x] ~~Grad engine~~ -> new task: ~~matmul/div autograd.~~ -> scaler part still remaining.
 - [x] ~~randn Generator~~ -> with seed
 - [ ] still more operation is remaining on Tensors, add them.
-- [ ] Make the Tensor fast: Check the `tensor.c` and `Tensorwrapper.pyx` files again, and try to optimize them to make them faster.
+- [ ] Make the Tensor fast: ~~Check the `tensor.c` and `Tensorwrapper.pyx` files again~~, and try to optimize them to make them faster -> still not done.
 - [ ] stop using numpy -> add the reshape, and other stuff.
 - [ ] Build a Tensor for Int, Double, Long, etc. 
 - [ ] Use the Fast matrix multiplication algorithm to reduce the time complexity.
