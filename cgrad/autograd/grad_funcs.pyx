@@ -10,15 +10,15 @@ def init_grad(tensor: Tensor, output_shape):
 def accumulate_grad_matmul(tensor: Tensor, grad_increment):
     """Accumulates the gradient increment into the tensor's gradient."""
     grad_increment.require_grad = False
-    tensor.grad.require_grad = False
+
     if tensor.grad.shape != grad_increment.shape:
         grad_increment = Tensor(np.sum(grad_increment.item, axis=tuple(range(grad_increment.ndim - tensor.grad.ndim))).tolist())
-    tensor.grad = tensor.grad + grad_increment
+    tensor.grad +=  grad_increment
 
 def accumulate_grad(tensor:Tensor, grad_increment):
     """Accumulates the gradient"""
     grad_increment.require_grad = False
-    tensor.grad.require_grad = False
+
     output_grad = (tensor.grad) + grad_increment
     if tensor.shape == output_grad.shape:
         tensor.grad = output_grad

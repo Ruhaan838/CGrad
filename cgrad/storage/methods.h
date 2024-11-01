@@ -16,21 +16,39 @@ void transpose2d(float* src_matrix, float* dst_matrix, int rows, int cols);
 FloatTensor* init_tensor(float *data, int *shape, int dim);
 
 //oprations
-FloatTensor* add_tensor(FloatTensor* tensor1, FloatTensor* tensor2);
-FloatTensor* mul_ele_tensor(FloatTensor* tensor1, FloatTensor* tensor2);
-FloatTensor* pow_tensor(FloatTensor* tenosr1, float num);
-FloatTensor* pow_two_tensor(FloatTensor* tensor1, FloatTensor* tenso2);
-FloatTensor* sum_tensor(FloatTensor* input_tensor, int axis, int keepdims);
+void add_tensor(float *data1, float *data2, float *r_data, 
+                int *shape1, int* shape2, int* r_shape, 
+                int* stride1, int* stride2, 
+                int dim1, int dim2, int r_dim, int max_dim);
+
+void mul_ele_tensor(float *data1, float *data2, float *r_data, 
+                    int *shape1, int *shape2, int *r_shape, 
+                    int *stride1, int *stride2, 
+                    int dim1, int dim2, int r_dim, int max_dim);
+
+void pow_tensor(float *data, float *r_data, int size, float num);
+
+void pow_two_tensor(float *data1, float *data2, float *r_data, 
+                    int *shape1, int *shape2, int *r_shape, 
+                    int *stride1, int *stride2, 
+                    int dim1, int dim2, int r_dim, int max_dim);
+
+void sum_tensor(float* data1, int* shape1, int dim1, 
+                float* r_data, int* r_shape, int axis, int keepdims);
 
 // matrix
-FloatTensor* matmulNd(FloatTensor* tensor1, FloatTensor* tensor2);
-FloatTensor* transposeNd(FloatTensor* input_tensor);
+void matmulNd(float* data1, int* shape1, int* stride1, int dim1,
+              float* data2, int* shape2, int* stride2, int dim2,
+              float* result_data, int* result_shape, int* result_size, int* result_dim);
+              
+void transposeNd(float* input_data, int* input_shape, int input_dim,
+                 float* transposed_data, int* new_shape, int* new_size);
 
 //random number methods
-FloatTensor* random_tensor(int *shape, int ndim,int min, int max, int seed);
-FloatTensor* random_tensor_n(int *shape, int ndim, int seed);
+void random_tensor(int *shape, int ndim, int min, int max, int seed, float* data);
+void random_tensor_n(int *shape, int ndim, int seed, float* data);
 
 //ones and zeros
-FloatTensor* zeros_tensor(int *shape, int ndim);
-FloatTensor* ones_tensor(int *shape, int ndim);
+void zeros_tensor(int* shape, int ndim, float* data);
+void ones_tensor(int *shape, int ndim, float* data);
 #endif
