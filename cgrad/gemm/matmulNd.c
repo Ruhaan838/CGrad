@@ -6,80 +6,73 @@
 #include "../storage/Float_tensor.h"
 #include "../storage/methods.h"
 
-FloatTensor* matmulNd(FloatTensor* tensor1, FloatTensor* tensor2){
-    //check the matmul is possible 
-    int max_dim = matmul_broadcast_shape(tensor1->dim, tensor2->dim, tensor1->shape, tensor2->shape, NULL);
-    if (max_dim == -1){
-        return NULL;
+void matmulNd(float* data1, int* shape1, int* stride1, int dim1,
+              float* data2, int* shape2, int* stride2, int dim2,
+              float* result_data, int* result_shape, int* result_size, int* result_dim) {
+    // check if matmul is possible
+    *result_dim = matmul_broadcast_shape(dim1, dim2, shape1, shape2, NULL);
+    if (*result_dim == -1) {
+        result_data = NULL;
+        return;
     }
-    
-    //stroage the new shape to the result shape 
-    int *result_shape = (int*)malloc(max_dim * sizeof(int));
 
-    matmul_broadcast_shape(tensor1->dim, tensor2->dim, tensor1->shape, tensor2->shape, result_shape);
-    int result_size = 1;
-    for (int i = 0; i < max_dim; i++) {
-        result_size *= result_shape[i];
+
+    for (int i = 0; i < *result_dim; i++) {
+        result_shape[i] = shape1[i];
     }
-    float* result_data = (float*)malloc(result_size * sizeof(float));
-    
-    int* stride1 = (int*)malloc(max_dim * sizeof(int));
-    int* stride2 = (int*)malloc(max_dim * sizeof(int));
-    broadcast_stride(tensor1->shape, tensor1->stride, stride1, tensor1->dim, max_dim);
-    broadcast_stride(tensor2->shape, tensor2->stride, stride1, tensor2->dim, max_dim);
+    matmul_broadcast_shape(dim1, dim2, shape1, shape2, result_shape);
+    *result_size = 1;
+    for (int i = 0; i < *result_dim; i++) {
+        *result_size *= result_shape[i];
+    }
+
+    // Broadcast strides for each tensor
+    int* result_stride1 = (int*)malloc(*result_dim * sizeof(int));
+    int* result_stride2 = (int*)malloc(*result_dim * sizeof(int));
+    broadcast_stride(shape1, stride1, result_stride1, dim1, *result_dim);
+    broadcast_stride(shape2, stride2, result_stride2, dim2, *result_dim);
 
     int outer_size = 1;
-    for (int i = 0; i < max_dim - 2; i++) {
+    for (int i = 0; i < *result_dim - 2; i++) {
         outer_size *= result_shape[i];
     }
-    //call matmul 2d for all possible batch size
-    for (int i = 0; i < outer_size; i++) {
-        float* data1 = tensor1->data + i * stride1[0];
-        float* data2 = tensor2->data + i * stride2[0];
-        matmul2d(data1, data2, result_data + i * result_shape[max_dim - 2] * result_shape[max_dim - 1], 
-                 result_shape[max_dim - 2], tensor1->shape[tensor1->dim - 1], result_shape[max_dim - 1]);
-    }
-    //init new tensor
-    FloatTensor* result_tensor = init_tensor(result_data, result_shape, max_dim);
-    free(stride1); // remove trash
-    free(stride2);
-    free(result_data);
-    free(result_shape);
 
-    return result_tensor;
+    // Perform 2D matmul for each batch
+    for (int i = 0; i < outer_size; i++) {
+        float* batch_data1 = data1 + i * result_stride1[0];
+        float* batch_data2 = data2 + i * result_stride2[0];
+        matmul2d(batch_data1, batch_data2, result_data + i * result_shape[*result_dim - 2] * result_shape[*result_dim - 1],
+                 result_shape[*result_dim - 2], shape1[dim1 - 1], result_shape[*result_dim - 1]);
+    }
+
+    free(result_stride1);
+    free(result_stride2);
 }
 
-FloatTensor* transposeNd(FloatTensor* input_tensor) {
-    int dim = input_tensor->dim;
-    if (dim < 2) return NULL;
-
-    int* new_shape = (int*)malloc(dim * sizeof(int));
-    for (int i = 0; i < dim - 2; i++) {
-        new_shape[i] = input_tensor->shape[i];
+void transposeNd(float* input_data, int* input_shape, int input_dim,
+                 float* transposed_data, int* new_shape, int* new_size) {
+    if (input_dim < 2) {
+        transposed_data = NULL;
+        return;
     }
-    new_shape[dim - 2] = input_tensor->shape[dim - 1];
-    new_shape[dim - 1] = input_tensor->shape[dim - 2];
+
+    for (int i = 0; i < input_dim - 2; i++) {
+        new_shape[i] = input_shape[i];
+    }
+    new_shape[input_dim - 2] = input_shape[input_dim - 1];
+    new_shape[input_dim - 1] = input_shape[input_dim - 2];
 
     int batch_size = 1;
-    for (int i = 0; i < dim - 2; i++) {
+    for (int i = 0; i < input_dim - 2; i++) {
         batch_size *= new_shape[i];
     }
-    int rows = input_tensor->shape[dim - 2];
-    int cols = input_tensor->shape[dim - 1];
-    int new_size = batch_size * rows * cols;
-
-    float* transposed_data = (float*)malloc(new_size * sizeof(float));
+    int rows = input_shape[input_dim - 2];
+    int cols = input_shape[input_dim - 1];
+    *new_size = batch_size * rows * cols;
 
     for (int i = 0; i < batch_size; i++) {
-        float* src_matrix = input_tensor->data + i * rows * cols;
+        float* src_matrix = input_data + i * rows * cols;
         float* dst_matrix = transposed_data + i * rows * cols;
         transpose2d(src_matrix, dst_matrix, rows, cols);
     }
-
-    FloatTensor* result_tensor = init_tensor(transposed_data, new_shape, dim);
-    
-    free(transposed_data);
-    free(new_shape);
-
-    return result_tensor;
 }
