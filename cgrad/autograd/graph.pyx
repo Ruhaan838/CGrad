@@ -20,7 +20,7 @@ cdef class BackwardGraph:
                 topo.append(node)
         
         if output.grad is None:
-            output.grad = ones(output.shape)
+            output.grad = ones(output.shape, require_grad=False)
         
         topo_sort_helper(output)
         
