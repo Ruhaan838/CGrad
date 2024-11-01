@@ -22,27 +22,24 @@ void broadcast_stride(int* shape, int* stride, int* r_stride1, int dim, int max_
     }
 }
 
-int broadcast_shape(int* shape1, int dim1, int* shape2, int dim2, int *ans) {
-    // get the max of the both dims
+int broadcast_shape(int *shape1, int dim1, int *shape2, int dim2, int *ans) {
     int max_dim = (dim1 > dim2) ? dim1 : dim2;
-    int dima = dim1;
-    int dimb = dim2;
-    // is the ans is not null
+    
     if (ans != NULL) {
         for (int i = 0; i < max_dim; i++) {
-            //same as broadcast_stride
-            int dim_a = (i >= dima) ? 1 : shape1[dima - 1 - i];
-            int dim_b = (i >= dimb) ? 1 : shape2[dimb - 1 - i];
-            //check the competable shape or not
+            int dim_a = (i >= dim1) ? 1 : shape1[dim1 - 1 - i];
+            int dim_b = (i >= dim2) ? 1 : shape2[dim2 - 1 - i];
+            
             if (dim_a != 1 && dim_b != 1 && dim_a != dim_b) {
-                return -1;  // Incompatible shapes
+                return -1;  
             }
-            //update the ans shape of from last to first.
+
             ans[max_dim - 1 - i] = (dim_a > dim_b) ? dim_a : dim_b;
         }
     }
     return max_dim;
 }
+
 
 // tensor initialization
 FloatTensor* init_tensor(float *data, int *shape, int ndim){
@@ -83,201 +80,163 @@ FloatTensor* init_tensor(float *data, int *shape, int ndim){
     return newtensor;
 }
 
-FloatTensor* add_tensor(FloatTensor* tensor1, FloatTensor* tensor2) {
-    // take out the max dim and tell it's ndim_result
-    int ndim_result = broadcast_shape(tensor1->shape, tensor1->dim, tensor2->shape, tensor2->dim, NULL);
-    if (ndim_result == -1) {
-        return NULL;
-    }
+void add_tensor(float *data1, float *data2, float *r_data, 
+                int *shape1, int *shape2, int *r_shape, 
+                int *stride1, int *stride2, 
+                int dim1, int dim2, int r_dim, int max_dim) {
 
-    int* result_shape = (int*)malloc(ndim_result * sizeof(int));
-
-    broadcast_shape(tensor1->shape, tensor1->dim, tensor2->shape, tensor2->dim, result_shape);//this time the result_shape is update
-
-    int* result_stride1 = (int*)malloc(ndim_result * sizeof(int));
-    int* result_stride2 = (int*)malloc(ndim_result * sizeof(int));
-    broadcast_stride(tensor1->shape, tensor1->stride, result_stride1, tensor1->dim, ndim_result);//caculate the strides
-    broadcast_stride(tensor2->shape, tensor2->stride, result_stride2, tensor2->dim, ndim_result);
-
-    //same loop exits in add_tensor
-    int total_elements = 1;
-    for (int i = 0; i < ndim_result; i++) {
-        total_elements *= result_shape[i];
-    }
-
-    float* result_data = (float*)malloc(total_elements * sizeof(float)); 
-    FloatTensor* result = init_tensor(result_data, result_shape, ndim_result); 
-
-    //now caculate the offset of the tensor at wich position the tensor data go
-    // update the new tensor data
-    for (int idx = 0; idx < total_elements; idx++) {//up to total ele
-        int offset1 = 0, offset2 = 0;//assume like a[i][j] i:offset1, j:offset2
-        int n_idx = idx;
-
-        for (int i = 0; i < ndim_result; i++) {
-            int stride_idx = n_idx / result->stride[i];
-            n_idx %= result->stride[i];
-
-            offset1 += stride_idx * result_stride1[i];
-            offset2 += stride_idx * result_stride2[i];
-        }
-        // here the data add and also for other part the hole logic is same just change the sign like +, *, pow.
-        result->data[idx] = tensor1->data[offset1] + tensor2->data[offset2];
-    }
-
-    free(result_stride1);//remove extra for memoery efficiency
-    free(result_stride2);
-
-    return result;
-}
-
-FloatTensor* mul_ele_tensor(FloatTensor* tensor1, FloatTensor* tensor2) {
-
-    int ndim_result = broadcast_shape(tensor1->shape, tensor1->dim, tensor2->shape, tensor2->dim, NULL);
-    if (ndim_result == -1) {
-        return NULL;
-    }
-
-    int* result_shape = (int*)malloc(ndim_result * sizeof(int));
-
-    broadcast_shape(tensor1->shape, tensor1->dim, tensor2->shape, tensor2->dim, result_shape);
-
-    int* result_stride1 = (int*)malloc(ndim_result * sizeof(int));
-    int* result_stride2 = (int*)malloc(ndim_result * sizeof(int));
-    broadcast_stride(tensor1->shape, tensor1->stride, result_stride1, tensor1->dim, ndim_result);
-    broadcast_stride(tensor2->shape, tensor2->stride, result_stride2, tensor2->dim, ndim_result);
+    int *result_stride1 = (int *)malloc(max_dim * sizeof(int));
+    int *result_stride2 = (int *)malloc(max_dim * sizeof(int));
+    broadcast_stride(shape1, stride1, result_stride1, dim1, max_dim);
+    broadcast_stride(shape2, stride2, result_stride2, dim2, max_dim);
 
     int total_elements = 1;
-    for (int i = 0; i < ndim_result; i++) {
-        total_elements *= result_shape[i];
+    for (int i = 0; i < max_dim; i++) {
+        total_elements *= r_shape[i];
     }
 
-    float* result_data = (float*)malloc(total_elements * sizeof(float)); 
-    FloatTensor* result = init_tensor(result_data, result_shape, ndim_result); 
+    int *r_stride = (int *)malloc(max_dim * sizeof(int));
+    cal_stride(r_shape, r_stride, max_dim);
 
     for (int idx = 0; idx < total_elements; idx++) {
         int offset1 = 0, offset2 = 0;
         int n_idx = idx;
 
-        for (int i = 0; i < ndim_result; i++) {
-            int stride_idx = n_idx / result->stride[i];
-            n_idx %= result->stride[i];
+        for (int i = 0; i < max_dim; i++) {
+            int stride_idx = n_idx / r_stride[i];
+            n_idx %= r_stride[i];
 
             offset1 += stride_idx * result_stride1[i];
             offset2 += stride_idx * result_stride2[i];
         }
-
-        result->data[idx] = tensor1->data[offset1] * tensor2->data[offset2];
+        r_data[idx] = data1[offset1] + data2[offset2];
     }
 
     free(result_stride1);
     free(result_stride2);
-
-    return result;
+    free(r_stride);
 }
 
-FloatTensor* pow_tensor(FloatTensor* tensor1, float num){
+void mul_ele_tensor(float *data1, float *data2, float *r_data, 
+                    int *shape1, int *shape2, int *r_shape, 
+                    int *stride1, int *stride2, 
+                    int dim1, int dim2, int r_dim, int max_dim) {
 
-    float *data = (float*)malloc(tensor1->size * sizeof(float));
-    for (int k = 0; k < tensor1->size; k++){
-        data[k] = pow(tensor1->data[k], num);
-    }
-    FloatTensor* pow_ans_tensor = init_tensor(data, tensor1->shape, tensor1->dim);
-    return pow_ans_tensor;
-}
-
-FloatTensor* pow_two_tensor(FloatTensor* tensor1, FloatTensor* tensor2) {
-
-    int ndim_result = broadcast_shape(tensor1->shape, tensor1->dim, tensor2->shape, tensor2->dim, NULL);
-    if (ndim_result == -1) {
-        return NULL;
-    }
-
-    int* result_shape = (int*)malloc(ndim_result * sizeof(int));
-
-    broadcast_shape(tensor1->shape, tensor1->dim, tensor2->shape, tensor2->dim, result_shape);
-
-    int* result_stride1 = (int*)malloc(ndim_result * sizeof(int));
-    int* result_stride2 = (int*)malloc(ndim_result * sizeof(int));
-    broadcast_stride(tensor1->shape, tensor1->stride, result_stride1, tensor1->dim, ndim_result);
-    broadcast_stride(tensor2->shape, tensor2->stride, result_stride2, tensor2->dim, ndim_result);
+    int *result_stride1 = (int *)malloc(max_dim * sizeof(int));
+    int *result_stride2 = (int *)malloc(max_dim * sizeof(int));
+    broadcast_stride(shape1, stride1, result_stride1, dim1, max_dim);
+    broadcast_stride(shape2, stride2, result_stride2, dim2, max_dim);
 
     int total_elements = 1;
-    for (int i = 0; i < ndim_result; i++) {
-        total_elements *= result_shape[i];
+    for (int i = 0; i < max_dim; i++) {
+        total_elements *= r_shape[i];
     }
 
-    float* result_data = (float*)malloc(total_elements * sizeof(float)); 
-    FloatTensor* result = init_tensor(result_data, result_shape, ndim_result); 
+    int *r_stride = (int *)malloc(max_dim * sizeof(int));
+    cal_stride(r_shape, r_stride, max_dim);
 
     for (int idx = 0; idx < total_elements; idx++) {
         int offset1 = 0, offset2 = 0;
         int n_idx = idx;
 
-        for (int i = 0; i < ndim_result; i++) {
-            int stride_idx = n_idx / result->stride[i];
-            n_idx %= result->stride[i];
+        for (int i = 0; i < max_dim; i++) {
+            int stride_idx = n_idx / r_stride[i];
+            n_idx %= r_stride[i];
 
             offset1 += stride_idx * result_stride1[i];
             offset2 += stride_idx * result_stride2[i];
         }
-
-        result->data[idx] = pow(tensor1->data[offset1], tensor2->data[offset2]);
+        r_data[idx] = data1[offset1] * data2[offset2];
     }
 
     free(result_stride1);
     free(result_stride2);
-
-    return result;
+    free(r_stride);
 }
 
+void pow_tensor(float *data, float *r_data, int size, float num){
 
-FloatTensor* sum_tensor(FloatTensor* input_tensor, int axis, int keepdims) {
+    for (int k = 0; k < size; k++){
+        r_data[k] = pow(data[k], num);
+    }
+}
+
+void pow_two_tensor(float *data1, float *data2, float *r_data, 
+                    int *shape1, int *shape2, int *r_shape, 
+                    int *stride1, int *stride2, 
+                    int dim1, int dim2, int r_dim, int max_dim) {
+
+    int *result_stride1 = (int *)malloc(max_dim * sizeof(int));
+    int *result_stride2 = (int *)malloc(max_dim * sizeof(int));
+    broadcast_stride(shape1, stride1, result_stride1, dim1, max_dim);
+    broadcast_stride(shape2, stride2, result_stride2, dim2, max_dim);
+
+    int total_elements = 1;
+    for (int i = 0; i < max_dim; i++) {
+        total_elements *= r_shape[i];
+    }
+
+    int *r_stride = (int *)malloc(max_dim * sizeof(int));
+    cal_stride(r_shape, r_stride, max_dim);
+
+    for (int idx = 0; idx < total_elements; idx++) {
+        int offset1 = 0, offset2 = 0;
+        int n_idx = idx;
+
+        for (int i = 0; i < max_dim; i++) {
+            int stride_idx = n_idx / r_stride[i];
+            n_idx %= r_stride[i];
+
+            offset1 += stride_idx * result_stride1[i];
+            offset2 += stride_idx * result_stride2[i];
+        }
+        r_data[idx] = pow(data1[offset1], data2[offset2]);
+    }
+
+    free(result_stride1);
+    free(result_stride2);
+    free(r_stride);
+}
+
+void sum_tensor(float* data1, int* shape1, int dim1, 
+                float* r_data, int* r_shape, int axis, int keepdims) {
     int i, j, k;
-    int ndim = input_tensor->dim;
-    int* shape = input_tensor->shape;
-    
-    int new_ndim = keepdims ? ndim : ndim - 1;
-    int* new_shape = (int*)malloc(new_ndim * sizeof(int));
     int result_size = 1;
 
-    for (i = 0, k = 0; i < ndim; i++) {
+    // Calculate the new shape
+    for (i = 0, k = 0; i < dim1; i++) {
         if (i == axis) {
-            if (keepdims) new_shape[k++] = 1;
+            if (keepdims) {
+                r_shape[k++] = 1;
+            }
         } else {
-            new_shape[k++] = shape[i];
-            result_size *= shape[i];
+            r_shape[k++] = shape1[i];
+            result_size *= shape1[i];
         }
     }
 
-    float* result_data = (float*)malloc(result_size * sizeof(float));
-    if (!result_data) return NULL;
+    // Initialize the result data array to zero
+    for (i = 0; i < result_size; i++) {
+        r_data[i] = 0.0;
+    }
 
-    for (i = 0; i < result_size; i++) result_data[i] = 0.0;
-
+    // Calculate outer and inner sizes for summing along the specified axis
     int outer_size = 1, inner_size = 1;
-    for (i = 0; i < axis; i++) outer_size *= shape[i];
-    for (i = axis + 1; i < ndim; i++) inner_size *= shape[i];
+    for (i = 0; i < axis; i++) outer_size *= shape1[i];
+    for (i = axis + 1; i < dim1; i++) inner_size *= shape1[i];
 
+    // Sum along the specified axis
     for (i = 0; i < outer_size; i++) {
-        for (j = 0; j < shape[axis]; j++) {
+        for (j = 0; j < shape1[axis]; j++) {
             for (k = 0; k < inner_size; k++) {
-                int input_index = i * shape[axis] * inner_size + j * inner_size + k;
+                int input_index = i * shape1[axis] * inner_size + j * inner_size + k;
                 int result_index = i * inner_size + k;
-                result_data[result_index] += input_tensor->data[input_index];
+                r_data[result_index] += data1[input_index];
             }
         }
     }
-
-    FloatTensor* result_tensor = init_tensor(result_data, new_shape, new_ndim);
-    if (!result_tensor) {
-        free(result_data);
-        free(new_shape);
-        return NULL;
-    }
-
-    return result_tensor;
 }
+
 
 void display_tensor(FloatTensor *tensor){
     printf("Tensor [data = (");

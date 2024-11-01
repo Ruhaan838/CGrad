@@ -14,16 +14,37 @@ cdef extern from "../storage/Float_tensor.h":
         int size
         
 cdef extern from "../storage/methods.h":
+
     int broadcast_shape(int* shape1, int dim1, int* shape2, int dim2, int *ans)
-    int matmul_broadcast_shape(int dim1, int dim2, int* shape1, int* shape2, int* shape3);
+
+    int matmul_broadcast_shape(int dim1, int dim2, int* shape1, int* shape2, int* shape3)
+
     FloatTensor* init_tensor(float *data, int *shape, int dim)
-    FloatTensor* add_tensor(FloatTensor* tensor1, FloatTensor* tensor2)
-    FloatTensor* mul_ele_tensor(FloatTensor* tensor1, FloatTensor* tenosr2)
+
+    void add_tensor(float *data1, float *data2, float *r_data, 
+                int *shape1, int* shape2, int* r_shape, 
+                int* stride1, int* stride2, 
+                int dim1, int dim2, int r_dim, int max_dim)
+
+    void mul_ele_tensor(float *data1, float *data2, float *r_data, 
+                    int *shape1, int *shape2, int *r_shape, 
+                    int *stride1, int *stride2, 
+                    int dim1, int dim2, int r_dim, int max_dim)
+
     FloatTensor* pow_two_tensor(FloatTensor* tensor1, FloatTensor* tensor2)
-    FloatTensor* pow_tensor(FloatTensor* tensor1, float num)
-    FloatTensor* matmulNd(FloatTensor* tensor1, FloatTensor* tensor2)
-    FloatTensor* transposeNd(FloatTensor* input_tensor)
-    FloatTensor* sum_tensor(FloatTensor* input_tensor, int axis, int keepdims)
+
+    void pow_tensor(float *data, float *r_data, int size, float num)
+
+    void matmulNd(float* data1, int* shape1, int* stride1, int dim1,
+              float* data2, int* shape2, int* stride2, int dim2,
+              float* result_data, int* result_shape, int* result_size, int* result_dim)
+
+    void transposeNd(float* input_data, int* input_shape, int input_dim,
+                 float* transposed_data, int* new_shape, int* new_size)
+
+    void sum_tensor(float* data1, int* shape1, int dim1, 
+                float* r_data, int* r_shape, int axis, int keepdims)
+
     void display_tensor(FloatTensor *tensor)
 
 cdef class Tensor:
@@ -114,6 +135,13 @@ cdef class Tensor:
                 raise ValueError("Unsported the grad type")
         else:
             raise AttributeError("The require_grad is must True for set the grad.")
+
+    def zero_(self):
+        for i in range(self.tensor.size):
+            self.tensor.data[i] = 0.0
+        item1 = np.array([0.0] * self.tensor.size)
+        self._item = item1.reshape(self.shape).tolist()  
+        
     @property
     def prev(self):
         return self._prev
@@ -147,7 +175,7 @@ cdef class Tensor:
     def transpose(self):
         return self._transpose_nd()
 
-    def sum(self, axis=-1, keepdims=False):
+    def sum(self, axis=0, keepdims=False):
         return self.sum_t(axis, keepdims)
 
     cdef void convert_and_init(self, data_list: list, arr_shape: tuple):
@@ -212,7 +240,7 @@ cdef class Tensor:
             return ans
         elif isinstance(other, (int, float)):
             ans = self._add_scalar(other)
-            ans.require_grad = self.require_grad or other.require_grad
+            ans.require_grad = self.require_grad
             return ans
         else:
             raise TypeError(f"Unsupported type for addition: {type(other)}")
@@ -337,26 +365,33 @@ cdef class Tensor:
         """
         Helper function to add two tensors. Requires both tensors to have the same shape.
         """
-        cdef int* ans = <int*>malloc(self.tensor.dim * sizeof(int))
-        cdef int allow = broadcast_shape(self.tensor.shape, self.tensor.dim, other.tensor.shape, other.tensor.dim, ans)
+        cdef int max_dim = broadcast_shape(self.tensor.shape, self.tensor.dim, other.tensor.shape, other.tensor.dim, NULL);
+        cdef int *r_shape = <int*>malloc(max_dim * sizeof(int));
+        cdef int allow = broadcast_shape(self.tensor.shape, self.tensor.dim, other.tensor.shape, other.tensor.dim, r_shape)
 
         if allow == -1:
             raise ValueError(f"Shapes of the tensors must be broadcasted but we found {self._shape} and {other._shape}")
+        
+        cdef int max_size = self.tensor.size if self.tensor.size > other.tensor.size else other.tensor.size
+        cdef float *r_data = <float*>malloc(max_size * sizeof(float));
 
         if sub:
            for i in range(other.tensor.size):
                other.tensor.data[i] *= -1
 
-        new_add_tensor = add_tensor(self.tensor, other.tensor)
+        add_tensor(self.tensor.data, other.tensor.data, r_data, self.tensor.shape, other.tensor.shape, r_shape, self.tensor.stride, other.tensor.stride, self.tensor.dim, other.tensor.dim, max_dim, max_dim)
 
-        if new_add_tensor is NULL:
-            raise MemoryError("Failed to allocate memory for the result tensor.")
+        if r_data is NULL:
+            raise MemoryError("Failed to allocate memory for the result data.")
 
-        new_added_data = np.array([new_add_tensor.data[i] for i in range(new_add_tensor.size)])
-        new_shape = tuple(new_add_tensor.shape[i] for i in range(new_add_tensor.dim))
+        new_added_data = np.array([r_data[i] for i in range(max_size)])
+        new_shape = tuple(r_shape[i] for i in range(max_dim))
         new_added_data = new_added_data.reshape(new_shape)
         ans_tensor = Tensor(new_added_data)
         ans_tensor._prev = set((self, other))
+
+        free(r_data)
+        free(r_shape)
 
         return ans_tensor
 
@@ -390,27 +425,34 @@ cdef class Tensor:
         """
         Helper function for ele wise multiplication.
         """
+        cdef int max_dim = broadcast_shape(self.tensor.shape, self.tensor.dim, other.tensor.shape, other.tensor.dim, NULL);
+        cdef int *r_shape = <int*>malloc(max_dim * sizeof(int));
+        cdef int allow = broadcast_shape(self.tensor.shape, self.tensor.dim, other.tensor.shape, other.tensor.dim, r_shape)
 
-        cdef int* ans = <int*>malloc(self.tensor.dim * sizeof(int))
-        cdef int allow = broadcast_shape(self.tensor.shape, self.tensor.dim, other.tensor.shape, other.tensor.dim, ans)
         if allow == -1:
             raise ValueError(f"Shapes of the tensors must be broadcasted but we found {self._shape} and {other._shape}")
         
+        cdef int max_size = self.tensor.size if self.tensor.size > other.tensor.size else other.tensor.size
+        cdef float *r_data = <float*>malloc(max_size * sizeof(float));
+
         if div:
-            for i in range(other.tensor.size):
-                other.tensor.data[i] = other.tensor.data[i] ** -1
+           for i in range(other.tensor.size):
+               other.tensor.data[i] = other.tensor.data[i] ** -1
 
-        new_mul_tensor = mul_ele_tensor(self.tensor, other.tensor)
+        mul_ele_tensor(self.tensor.data, other.tensor.data, r_data, self.tensor.shape, other.tensor.shape, r_shape, self.tensor.stride, other.tensor.stride, self.tensor.dim, other.tensor.dim, max_dim, max_dim)
 
-        if new_mul_tensor == NULL:
-            raise MemoryError("Failed to allocate memory for new_mul_tensor.")
-        
-        new_mul_data = np.array([new_mul_tensor.data[i] for i in range(new_mul_tensor.size)])
-        new_shape = tuple(new_mul_tensor.shape[i] for i in range(new_mul_tensor.dim))
-        new_mul_data = new_mul_data.reshape(new_shape)
+        if r_data is NULL:
+            raise MemoryError("Failed to allocate memory for the result data.")
 
-        ans_tensor = Tensor(new_mul_data)
+        new_added_data = np.array([r_data[i] for i in range(max_size)])
+        new_shape = tuple(r_shape[i] for i in range(max_dim))
+        new_added_data = new_added_data.reshape(new_shape)
+
+        ans_tensor = Tensor(new_added_data)
         ans_tensor._prev = set((self, other))
+
+        free(r_data)
+        free(r_shape)
 
         return ans_tensor
 
@@ -445,23 +487,30 @@ cdef class Tensor:
         """
             Helper function for get the power with other tensor.
         """
-        cdef int* ans = <int*>malloc(self.tensor.dim * sizeof(int))
-        cdef int allow = broadcast_shape(self.tensor.shape, self.tensor.dim, other.tensor.shape, other.tensor.dim, ans)
+        cdef int max_dim = broadcast_shape(self.tensor.shape, self.tensor.dim, other.tensor.shape, other.tensor.dim, NULL);
+        cdef int *r_shape = <int*>malloc(max_dim * sizeof(int));
+        cdef int allow = broadcast_shape(self.tensor.shape, self.tensor.dim, other.tensor.shape, other.tensor.dim, r_shape)
 
         if allow == -1:
-            raise ValueError(f"Shapes of the tensors must be but we found {self._shape} and {other._shape}")
+            raise ValueError(f"Shapes of the tensors must be broadcasted but we found {self._shape} and {other._shape}")
         
-        two_pow_tensor = pow_two_tensor(self.tensor, other.tensor)
+        cdef int max_size = self.tensor.size if self.tensor.size > other.tensor.size else other.tensor.size
+        cdef float *r_data = <float*>malloc(max_size * sizeof(float));
 
-        if two_pow_tensor == NULL:
-            raise MemoryError("Failes to allocate the memory for new tensor for pow")
-        
-        two_pow_data = np.array([two_pow_tensor.data[i] for i in range(two_pow_tensor.size)])
-        new_shape = tuple(two_pow_tensor.shape[i] for i in range(two_pow_tensor.dim))
-        two_pow_data = two_pow_data.reshape(new_shape)
+        mul_ele_tensor(self.tensor.data, other.tensor.data, r_data, self.tensor.shape, other.tensor.shape, r_shape, self.tensor.stride, other.tensor.stride, self.tensor.dim, other.tensor.dim, max_dim, max_dim)
 
-        ans_tensor = Tensor(two_pow_data)
+        if r_data is NULL:
+            raise MemoryError("Failed to allocate memory for the result data.")
+
+        new_added_data = np.array([r_data[i] for i in range(max_size)])
+        new_shape = tuple(r_shape[i] for i in range(max_dim))
+        new_added_data = new_added_data.reshape(new_shape)
+
+        ans_tensor = Tensor(new_added_data)
         ans_tensor._prev = set((self, other))
+
+        free(r_data)
+        free(r_shape)
 
         return ans_tensor
 
@@ -469,73 +518,119 @@ cdef class Tensor:
         """
             Helper function for power with num
         """
-        new_pow_tensor = pow_tensor(self.tensor, num)
+        cdef float *data = <float*>malloc(self.tensor.size * sizeof(float));
+        pow_tensor(self.tensor.data, data, self.tensor.size, num)
 
-        if new_pow_tensor == NULL:
-            raise MemoryError("Failed to allocate the memory for the pow tensor.")
+        if data == NULL:
+            raise MemoryError("Failed to allocate the memory for the pow data.")
         
-        new_pow_data = np.array([new_pow_tensor.data[i] for i in range(new_pow_tensor.size)])
-        new_shape = tuple(new_pow_tensor.shape[i] for i in range(new_pow_tensor.dim))
+        new_pow_data = np.array([data[i] for i in range(self.tensor.size)])
+        new_shape = tuple(self.tensor.shape[i] for i in range(self.tensor.dim))
         new_pow_data = new_pow_data.reshape(new_shape)
+
         ans_tensor = Tensor(new_pow_data)
         ans_tensor._prev = set((self, num))
         return ans_tensor
 
     cdef _matmul(self, Tensor other):
+        
+        if not isinstance(self, Tensor) and not isinstance(other, Tensor):
+            raise TypeError(f"Unsupported type for matmul: {type(self)} or {type(other)}")
 
-        if isinstance(self, Tensor) and isinstance(other, Tensor):
-            max_dim = matmul_broadcast_shape(self.tensor.dim, other.tensor.dim, self.tensor.shape, other.tensor.shape, NULL)
+        cdef int max_dim = matmul_broadcast_shape(self.tensor.dim, other.tensor.dim, self.tensor.shape, other.tensor.shape, NULL)
+        
+        if max_dim == -1:
+            raise ValueError(f"Unable to do the Matrix Multiplication for Tensor1 with shape {self.shape} and Tensor2 with shape {other.shape}")
 
-            if max_dim == -1:
-                raise ValueError(f"Unable to do the Matrix Multiplication for Tesnor1 with shape {self.shape} and Tensor2 with shape {other.shape}")
-            
-            ans_matmul = matmulNd(self.tensor, other.tensor)
-            
-            if ans_matmul == NULL:
-                raise MemoryError("Failed to allocate memory for matmul tensor.")
-            
-            new_matmul_data = np.array([ans_matmul.data[i] for i in range(ans_matmul.size)])
-            new_shape = tuple(ans_matmul.shape[i] for i in range(ans_matmul.dim))
-            new_matmul_data = new_matmul_data.reshape(new_shape)
+        cdef int* result_shape = <int*>malloc(max_dim * sizeof(int))
+        if result_shape == NULL:
+            raise MemoryError("Failed to allocate memory for result shape.")
+        
+        cdef int result_size = 1
+        matmul_broadcast_shape(self.tensor.dim, other.tensor.dim, self.tensor.shape, other.tensor.shape, result_shape)
+        for i in range(max_dim):
+            result_size *= result_shape[i]
+        
+        cdef float* result_data = <float*>malloc(result_size * sizeof(float))
+        if result_data == NULL:
+            free(result_shape)
+            raise MemoryError("Failed to allocate memory for matmul result data.")
+        
+        matmulNd(self.tensor.data, self.tensor.shape, self.tensor.stride, self.tensor.dim,
+                other.tensor.data, other.tensor.shape, other.tensor.stride, other.tensor.dim,
+                result_data, result_shape, &result_size, &max_dim)
+        
+        new_matmul_data = np.array([result_data[i] for i in range(result_size)])
+        new_shape = tuple(result_shape[i] for i in range(max_dim))
+        new_matmul_data = new_matmul_data.reshape(new_shape)
+        
+        ans_tensor = Tensor(new_matmul_data)
+        ans_tensor._prev = set((self, other))
+        
+        free(result_data)
+        free(result_shape)
+        
+        return ans_tensor
 
-            ans_tensor = Tensor(new_matmul_data)
-            ans_tensor._prev = set((self, other))
-
-            return ans_tensor
-        else:
-            raise TypeError(f"Unspported type for the matmul: {type(self) or {type(other)}}")
 
     cdef _transpose_nd(self):
 
         if not isinstance(self, Tensor):
-            raise TypeError(f"Unsppoted type for the transpose: {type(self)}")
-
-        ans_tesnor = transposeNd(self.tensor)
-
-        if ans_tesnor == NULL:
-            raise Exception(f"Can't transpose the shape: {self.shape}")
+            raise TypeError(f"Unsupported type for transpose: {type(self)}")
         
-        new_ans_data = np.array([ans_tesnor.data[i] for i in range(ans_tesnor.size)])
-        new_shape = tuple(ans_tesnor.shape[i] for i in range(ans_tesnor.dim))
+        cdef int* transposed_shape = <int*>malloc(self.tensor.dim * sizeof(int))        
+        cdef float* transposed_data = <float*>malloc(self.tensor.size * sizeof(float))
+
+        if transposed_data == NULL:
+            free(transposed_shape)
+            raise MemoryError("Failed to allocate memory for transpose data.")
+        
+        transposeNd(self.tensor.data, self.tensor.shape, self.tensor.dim, transposed_data, transposed_shape, &self.tensor.size)
+        
+        new_ans_data = np.array([transposed_data[i] for i in range(self.tensor.size)])
+        new_shape = tuple(transposed_shape[i] for i in range(self.tensor.dim))
         new_ans_data = new_ans_data.reshape(new_shape)
-
-        return Tensor(new_ans_data)
-    
-    cdef Tensor sum_t(self, axis, keepdims):
         
+        ans_tensor = Tensor(new_ans_data)
+        
+        free(transposed_data)
+        free(transposed_shape)
+        
+        return ans_tensor
+
+    
+    cdef Tensor sum_t(self, int axis, bint keepdims):
+        """
+        Summing along the specified axis with optional keepdims.
+        """
         if not isinstance(axis, int) or not isinstance(keepdims, bool):
-            raise f"Unspported type for axis {type(axis)} and keepdims {type(keepdims)}"
+            raise TypeError(f"Unsupported type for axis {type(axis)} and keepdims {type(keepdims)}")
 
-        cdef FloatTensor* result_tensor = sum_tensor(self.tensor, axis, keepdims)
+        cdef int new_dim = self.tensor.dim if keepdims else self.tensor.dim - 1
+        cdef float* data = <float*>malloc(self.tensor.size * sizeof(float))
+        cdef int* shape = <int*>malloc(new_dim * sizeof(int))
 
-        if result_tensor == NULL:
-            raise MemoryError("Unable to allocate memory for result tensor")
+        if data == NULL:
+            raise MemoryError("Unable to allocate memory for result data")
 
-        result_data = np.array([result_tensor.data[i] for i in range(result_tensor.size)])
-        result_shape = tuple(result_tensor.shape[i] for i in range(result_tensor.dim))
+        cdef int dim = 0 
+        cdef int size = 0
+        sum_tensor(self.tensor.data, self.tensor.shape, self.tensor.dim, data, shape, axis, keepdims)
+
+        size = 1
+        for i in range(new_dim):
+            size *= shape[i]
+        dim = new_dim
+
+        result_data = np.array([data[i] for i in range(size)])
+        result_shape = tuple(shape[i] for i in range(dim))
         result_data = result_data.reshape(result_shape)
         
+        free(data)
+        free(shape)
+
         return Tensor(result_data, require_grad=self.require_grad)
+
 
     def __repr__(self):
         round_list = np.round(self._item, 4)
