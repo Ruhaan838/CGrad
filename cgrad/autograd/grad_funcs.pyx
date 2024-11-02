@@ -10,20 +10,23 @@ def init_grad(tensor: Tensor, output_shape):
 def accumulate_grad_matmul(tensor: Tensor, grad_increment):
     """Accumulates the gradient increment into the tensor's gradient."""
     grad_increment.require_grad = False
-
     if tensor.grad.shape != grad_increment.shape:
         grad_increment = Tensor(np.sum(grad_increment.item, axis=tuple(range(grad_increment.ndim - tensor.grad.ndim))).tolist())
     tensor.grad +=  grad_increment
 
-def accumulate_grad(tensor:Tensor, grad_increment):
+def accumulate_grad(tensor:Tensor, grad_increment, is_sub=False):
     """Accumulates the gradient"""
     grad_increment.require_grad = False
 
     output_grad = (tensor.grad) + grad_increment
     if tensor.shape == output_grad.shape:
         tensor.grad = output_grad
+        if is_sub:
+            tensor.grad = tensor.grad * -1
     else:
         tensor.grad = output_grad.sum(axis=0, keepdims=True)
+        if is_sub:
+            tensor.grad = tensor.grad * -1
 
 #function that caculate the grad for the + oprations
 ## c = a + b -> dc/da = 1; dc/db = 1
@@ -33,14 +36,9 @@ def add_grad_tensor(tensor1: Tensor, tensor2: Tensor, output: Tensor, is_sub=Fal
             init_grad(tensor1, output.shape)
             accumulate_grad(tensor1, output.grad)
 
-        if is_sub:
-            t2 = tensor2 * -1
-        else:
-            t2 = tensor2
-
-        if t2.require_grad:
-            init_grad(t2, output.shape)
-            accumulate_grad(t2, output.grad)
+        if tensor2.require_grad:
+            init_grad(tensor2, output.shape)
+            accumulate_grad(tensor2, output.grad, is_sub)
 
     return _backward
 
