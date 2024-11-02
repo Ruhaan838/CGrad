@@ -261,7 +261,7 @@ cdef class Tensor:
         if isinstance(other, Tensor):
             ans = self._add_tensor(other, sub=True)
             ans.require_grad = self.require_grad or other.require_grad
-            ans.__back_init__("<SubBackward>", add_grad_tensor(self, other, ans))
+            ans.__back_init__("<SubBackward>", add_grad_tensor(self, other, ans, is_sub=True))
             return ans
         elif isinstance(other, (int, float)):
             ans = self._add_scalar(-other)

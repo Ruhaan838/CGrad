@@ -27,15 +27,20 @@ def accumulate_grad(tensor:Tensor, grad_increment):
 
 #function that caculate the grad for the + oprations
 ## c = a + b -> dc/da = 1; dc/db = 1
-def add_grad_tensor(tensor1: Tensor, tensor2: Tensor, output: Tensor):
+def add_grad_tensor(tensor1: Tensor, tensor2: Tensor, output: Tensor, is_sub=False):
     def _backward():
         if tensor1.require_grad:
             init_grad(tensor1, output.shape)
             accumulate_grad(tensor1, output.grad)
 
-        if tensor2.require_grad:
-            init_grad(tensor2, output.shape)
-            accumulate_grad(tensor2, output.grad)
+        if is_sub:
+            t2 = tensor2 * -1
+        else:
+            t2 = tensor2
+
+        if t2.require_grad:
+            init_grad(t2, output.shape)
+            accumulate_grad(t2, output.grad)
 
     return _backward
 
