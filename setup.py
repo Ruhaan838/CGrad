@@ -10,7 +10,8 @@ ext_modules = [
             'cgrad/tensor/tensor.c',
             'cgrad/gemm/matmulNd.c',
         ],
-        include_dirs=[numpy.get_include()]
+        include_dirs=[numpy.get_include()],
+        extra_compile_args=["-O2"]  # Add optimization flag
     ),
     Extension(
         "cgrad.optium.basic_ops",
@@ -18,21 +19,24 @@ ext_modules = [
             'cgrad/optium/basic_ops.pyx',
             'cgrad/optium/tensor_ops.c',
         ],
-        include_dirs=[numpy.get_include()]
+        include_dirs=[numpy.get_include()],
+        extra_compile_args=["-O3"] 
     ),
     Extension(
         "cgrad.autograd.grad_funcs",
         sources=[
             'cgrad/autograd/grad_funcs.pyx',
         ],
-        include_dirs=[numpy.get_include()]
+        include_dirs=[numpy.get_include()],
+        extra_compile_args=["-O2"] 
     ),
     Extension(
         "cgrad.autograd.graph",
         sources=[
             'cgrad/autograd/graph.pyx'
         ],
-        include_dirs=[numpy.get_include()]
+        include_dirs=[numpy.get_include()],
+        extra_compile_args=["-O2"] 
     )
 ]
 
