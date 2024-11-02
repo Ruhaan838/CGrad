@@ -118,6 +118,9 @@ cdef class Tensor:
     @property    
     def require_grad(self):
         return self._re_grad
+
+    def __getitem__(self, indx):
+        return Tensor(self._item[indx], self.require_grad)
     
     @require_grad.setter
     def require_grad(self, value:bool):
@@ -218,11 +221,6 @@ cdef class Tensor:
         free(c_data)
         free(c_shape)
 
-    def __getitem__(self, indx):
-        if isinstance(indx, (int, slice, tuple)):
-            return self._slice_data(np.array(self._item), indx)
-        else:
-            raise TypeError(f"Unsupported index type: {type(indx)}")
 
     def __back_init__(self, name_backward="", backward_func=None):
         """
@@ -358,8 +356,6 @@ cdef class Tensor:
         else:
             raise TypeError(f"Unspport type for matrix multiplication {type(other)}")
 
-    def _slice_data(self, data, indx):
-        return Tensor(data[indx])
 
     cdef _add_tensor(self, Tensor other, sub=False):
         """
