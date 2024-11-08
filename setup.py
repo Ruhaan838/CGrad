@@ -57,6 +57,7 @@ setup(
     package_data={
         'cgrad.Tensor':['cgrad/tensor.pyi'],
         'cgrad':['cgrad/optium/basic_ops.pyi'],
+        'cgrad.Autograd':['cgrad/autograd/grad_funcs.pyi']
     },
     include_package_data=True,  
     zip_safe=False  

@@ -114,7 +114,7 @@ z.sum().backward()
 print(x.grad)  # Gradients of x
 print(y.grad)  # Gradients of y
 ```
-#### Usinge Tensor likes:
+#### Using Tensor likes:
 ``` python
 x = cgrad.Tensor([2.0, 3.0], requires_grad=True)
 y = cgrad.Tensor([1.0, 4.0], requires_grad=True)
@@ -127,7 +127,7 @@ z.backward(custom_grad = cgrad.ones_like(x)) # allow to do the grad with you cus
 print(x.grad)
 print(y.grad)
 ```
-#### stop the Grad caculation
+#### Stop the Grad caculation
 ```python
 from cgrad import AutoGrad
 
