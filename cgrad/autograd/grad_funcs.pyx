@@ -1,90 +1,152 @@
-from cgrad.tensor.Tensorwrapper import Tensor
-from cgrad.optium.basic_ops import zeros
+from cgrad.tensor import Tensor
+from cgrad.optium.basic_ops import zeros, ones
 import numpy as np
+from contextlib import contextmanager
 
-def init_grad(tensor: Tensor, output_shape):
-    """Initializes the gradient for the tensor if it is None."""
-    if tensor.grad is None:
-        tensor.grad = zeros(output_shape, require_grad=False)
+requires_grad_enabled = True
 
-def accumulate_grad_matmul(tensor: Tensor, grad_increment):
-    """Accumulates the gradient increment into the tensor's gradient."""
-    grad_increment.require_grad = False
-    if tensor.grad.shape != grad_increment.shape:
-        grad_increment = Tensor(np.sum(grad_increment.item, axis=tuple(range(grad_increment.ndim - tensor.grad.ndim))).tolist())
-    tensor.grad +=  grad_increment
+cdef class AutoGrad:
 
-def accumulate_grad(tensor:Tensor, grad_increment, is_sub=False):
-    """Accumulates the gradient"""
-    grad_increment.require_grad = False
+    @staticmethod
+    def init_grad(tensor:Tensor, input_shape:tuple):
+        if tensor.grad is None and tensor.requires_grad and requires_grad_enabled:
+            tensor.grad = zeros(shape=input_shape, requires_grad=False)
 
-    output_grad = (tensor.grad) + grad_increment
-    if tensor.shape == output_grad.shape:
-        tensor.grad = output_grad
-        if is_sub:
-            tensor.grad = tensor.grad * -1
-    else:
-        tensor.grad = output_grad.sum(axis=0, keepdims=True)
-        if is_sub:
-            tensor.grad = tensor.grad * -1
+    @staticmethod
+    def accumulate_grad(tensor: Tensor, acc_tensor: Tensor):
+        """Accumulate gradients into the tensor's gradient."""
+        if tensor.grad is None and requires_grad_enabled:
+            tensor.grad = zeros(tensor.shape)
+        else:
+            acc_tensor.requires_grad = False
+            if tensor.grad.shape != acc_tensor.shape:
+                acc_tensor = acc_tensor.sum(axis=0, keepdims=True)
+            tensor.grad += acc_tensor
 
-#function that caculate the grad for the + oprations
-## c = a + b -> dc/da = 1; dc/db = 1
-def add_grad_tensor(tensor1: Tensor, tensor2: Tensor, output: Tensor, is_sub=False):
-    def _backward():
-        if tensor1.require_grad:
-            init_grad(tensor1, output.shape)
-            accumulate_grad(tensor1, output.grad)
+    @staticmethod
+    def accumulate_grad_matmul(tensor: Tensor, acc_tensor: Tensor):
+        """Accumulate gradient for matmul operation."""
+        if tensor.grad.shape != acc_tensor.shape:
+            acc_tensor = Tensor(np.sum(acc_tensor.item, axis=tuple(range(acc_tensor.ndim - tensor.grad.ndim))).tolist())
+        tensor.grad += acc_tensor
 
-        if tensor2.require_grad:
-            init_grad(tensor2, output.shape)
-            accumulate_grad(tensor2, output.grad, is_sub)
+    @staticmethod
+    def add_grad_tensor(tensor1: Tensor, tensor2: Tensor|int|float, ans_tensor:Tensor, is_sub: bool = False):
+        """Calculate gradients for addition/subtraction."""
+        def _backward(grad):
 
-    return _backward
+            if tensor1.requires_grad and requires_grad_enabled:
+                AutoGrad.init_grad(tensor1, ans_tensor.shape)
+                val_accumulate = grad
+                AutoGrad.accumulate_grad(tensor1, val_accumulate)
 
-#function that caculate the grad for the * oprations
-# c = a * b -> dc/da = b; dc/db = a
-def mul_grad_tensor(tensor1: Tensor, tensor2: Tensor, output: Tensor):
-    def _backward():
-        if tensor1.require_grad:
-            init_grad(tensor1, output.shape)
-            grad_increment = tensor2 * output.grad
-            accumulate_grad(tensor1, grad_increment)
+            if isinstance(tensor2, Tensor):
+                if tensor2.requires_grad and requires_grad_enabled:
+                    AutoGrad.init_grad(tensor2, ans_tensor.shape)
+                    val_accumulate = grad
+                    if is_sub:
+                        val_accumulate = -val_accumulate
+                    AutoGrad.accumulate_grad(tensor2, val_accumulate)
+            elif isinstance(tensor2, (int,float)):
+                pass
+        return _backward
 
-        if tensor2.require_grad:
-            init_grad(tensor2, output.shape)
-            grad_increment = tensor1 * output.grad
-            accumulate_grad(tensor2, grad_increment)
+    @staticmethod
+    def mul_grad_tensor(tensor1: Tensor, tensor2: Tensor|int|float, ans_tensor:Tensor):
+        """Calculate gradients for multiplication."""
+        def _backward(grad):
+            if isinstance(tensor2, Tensor):
+                if tensor1.requires_grad and requires_grad_enabled:
+                    AutoGrad.init_grad(tensor1, ans_tensor.shape)
+                    val_accumulate = tensor2 * ans_tensor.grad
+                    AutoGrad.accumulate_grad(tensor1, val_accumulate)
 
-    return _backward
+                if tensor2.requires_grad and requires_grad_enabled:
+                    AutoGrad.init_grad(tensor2, ans_tensor.shape)
+                    val_accumulate = tensor1 * ans_tensor.grad
+                    AutoGrad.accumulate_grad(tensor2, val_accumulate)
 
-#function that caculate the grad for the / oprations
-# c = a / b -> dc/da = 1 / b; dc/db = -(a / b**2)
-def div_grad_tensor(tensor1: Tensor, tensor2: Tensor, output: Tensor):
-    def _backward():
-        if tensor1.require_grad:
-            init_grad(tensor1, output.shape)
-            grad_increment = (1 / tensor2) * output.grad
-            accumulate_grad(tensor1, grad_increment)
+            elif isinstance(tensor2, (int,float)):
+                if tensor1.requires_grad and requires_grad_enabled:
+                    AutoGrad.init_grad(tensor1, ans_tensor.shape)
+                    val_accumulate = tensor2 * ans_tensor.grad
+                    AutoGrad.accumulate_grad(tensor1, val_accumulate)
 
-        if tensor2.require_grad:
-            init_grad(tensor2, output.shape)
-            dt_do = (-1 * tensor1 / tensor2 ** 2) * output.grad
-            accumulate_grad(tensor2, dt_do)
+        return _backward
+    
+    @staticmethod
+    def div_grad_tensor(tensor1: Tensor, tensor2: Tensor|int|float, ans_tensor:Tensor):
+        """Calculate gradients for division."""
+        def _backward(grad):
+            if isinstance(tensor2, Tensor):
+                if tensor1.requires_grad and requires_grad_enabled:
+                    AutoGrad.init_grad(tensor1, ans_tensor.shape)
+                    val_accumulate = (1 / tensor2) * ans_tensor.grad
+                    AutoGrad.accumulate_grad(tensor1, val_accumulate)
 
-    return _backward
+                if tensor2.requires_grad and requires_grad_enabled:
+                    AutoGrad.init_grad(tensor2, ans_tensor.shape)
+                    val_accumulate = ((-tensor1) / (tensor2 ** 2)) * ans_tensor.grad
+                    AutoGrad.accumulate_grad(tensor2, val_accumulate)
 
-#function that caculate the grad for the @ oprations
-def matmul_grad_tensor(tensor1: Tensor, tensor2: Tensor, output: Tensor):
-    def _backward():
-        if tensor1.require_grad:
-            init_grad(tensor1, tensor1.shape)
-            grad_increment = output.grad @ tensor2.transpose()
-            accumulate_grad_matmul(tensor1, grad_increment)
+            elif isinstance(tensor2, (int, float)):
+                if tensor1.requires_grad and requires_grad_enabled:
+                    AutoGrad.init_grad(tensor1, ans_tensor.shape)
+                    val_accumulate = (1/ tensor2) * ans_tensor.grad
+                    AutoGrad.accumulate_grad(tensor1, val_accumulate)
 
-        if tensor2.require_grad:
-            init_grad(tensor2, tensor2.shape)
-            grad_increment = tensor1.transpose() @ output.grad
-            accumulate_grad_matmul(tensor2, grad_increment)
+        return _backward
 
-    return _backward
+    @staticmethod
+    def matmul_grad_tensor(tensor1: Tensor, tensor2: Tensor, ans_tensor:Tensor):
+        """Calculate gradients for matrix multiplication."""
+        def _backward(grad):
+            if tensor1.requires_grad and requires_grad_enabled:
+                AutoGrad.init_grad(tensor1, ans_tensor.shape)
+                val_accumulate = ans_tensor.grad @ tensor2.transpose()
+                AutoGrad.accumulate_grad_matmul(tensor1, val_accumulate)
+            if tensor2.requires_grad and requires_grad_enabled:
+                AutoGrad.init_grad(tensor2, ans_tensor.shape)
+                val_accumulate = tensor1.transpose() @ ans_tensor.grad
+                AutoGrad.accumulate_grad_matmul(tensor2, val_accumulate)
+        return _backward
+
+    @staticmethod
+    def sum_grad(tensor: Tensor):
+        """Calculate gradient for sum."""
+        def _backward(grad):
+            if tensor.requires_grad and requires_grad_enabled:
+                AutoGrad.init_grad(tensor, tensor.shape)
+                tensor.grad += ones(tensor.shape) * grad
+        return _backward
+
+    @staticmethod
+    def mean_grad(tensor: Tensor):
+        """Calculate gradient for mean."""
+        def _backward(grad):
+            if tensor.requires_grad and requires_grad_enabled:
+                AutoGrad.init_grad(tensor, tensor.shape)
+                tensor.grad += (ones(tensor.shape) * grad) / tensor.numel
+        return _backward
+    
+    @contextmanager
+    @staticmethod
+    def no_grad():
+        # Disable gradients temporarily
+        GradMode.set_enabled(False)
+        try:
+            yield
+        finally:
+            # Re-enable gradients after block
+            GradMode.set_enabled(True)
+
+class GradMode:
+    _enabled = True
+
+    @classmethod
+    def is_enabled(cls):
+        return cls._enabled
+
+    @classmethod
+    def set_enabled(cls, mode: bool):
+        cls._enabled = mode

@@ -1,3 +1,6 @@
+from typing import List, Tuple, Optional
+import numpy as np
+
 from typing import List, Tuple, Optional, Iterable
 import numpy as np
 
@@ -10,7 +13,7 @@ class Tensor:
         data : List | Tuple | np.array | int | float
             Any Iterable 
         
-        require_grad: Optional[bool] = False
+        requires_grad: Optional[bool] = False
             if `True` the gradient caculation is happend
 
         Methods
@@ -47,7 +50,7 @@ class Tensor:
             matrix multiplication of the Two valid shape tensor.
         
     """
-    def __init__(self, data: List[float] | List[int] | Tuple[float] | Tuple[int] | Iterable | int| float, require_grad : Optional[bool] = False) -> None: ...
+    def __init__(self, data: List[float] | List[int] | Tuple[float] | Tuple[int] | Iterable | int| float, requires_grad : Optional[bool] = False) -> None: ...
     """
             Function that initalize the tensor using List, Tuple, np.array, int or float
             Attributes
@@ -68,7 +71,7 @@ class Tensor:
     @property
     def grad(self, value:Tensor) -> Tensor: ...
     @property
-    def require_grad(): ...
+    def requires_grad(): ...
     
     def __add__(self, other:Tensor | int | float) -> Tensor: ...
     def __radd__(self, other:Tensor | int| float) -> Tensor: ...
@@ -81,46 +84,27 @@ class Tensor:
     def __pow__(self, other:Tensor | int| float) -> Tensor: ...
     def __matmul__(self, other:Tensor) -> Tensor: ...
 
-    
-    def add(self, other:Tensor | int| float) -> Tensor: ...
-    """
-        Function for adding tensors or adding a scalar to a tensor.
-        internally call the self + other
-    """
-    def sub(self, other:Tensor | int| float) -> Tensor: ...
-    """
-        Subtraction of a tensor or scalar from self.
-        internally call the self - other
-    """
-    def mul(self, other:Tensor | int| float) -> Tensor: ...
-    """
-        Function for multiply tensors or multiply a scalar to a tensor.
-        internally call the self * other
-    """
-    def div(self, other:Tensor | int| float) -> Tensor: ...
-    """
-        Function for do the power of any tenor
-        internally call the self ** other
-    """
-    def pow(self, other:Tensor | int| float) -> Tensor: ...
-    """
-        Function for devide the two tensor and scaler
-        interally call the self / other
-    """ 
-    def matmul(self, other:Tensor) -> Tensor: ...
-    """
-        Function for mutiply the N dim matrix
-        internally call the self @ other
-    """
     def transpose(self) -> Tensor: ...
     """
         Transpose the tensor for all batch.
     """
-    def backward(self) -> None: ...
+    def backward(self, custom_grad:Optional[Tensor] = None) -> None: ...
     """
         Caculate the backward pass when if require_grad is True
     """
-    def sum(self, axis:int=-1, keepdims:Optional[bool]=False)-> Tensor: ...
+    def sum(self, axis:int=None, keepdims:Optional[bool]=False)-> Tensor: ...
     """
-        Sum the over the axis with checkof keepdims.
+        Sum the over the axis with check if keepdims.
+    """
+    def mean(self, axis:int=None, keepdims:Optional[bool]=False) -> Tensor: ...
+    """
+        mean the over the axis with check if keepdims.
+    """
+    def median(self, axis:int=None, keepdims:Optional[bool]=False) -> Tensor: ...
+    """
+        median the over the axis with check if keepdims.
+    """
+    def zeros_(self) -> None: ...
+    """
+        Set the tensor values to zero.
     """

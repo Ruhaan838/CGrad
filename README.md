@@ -1,10 +1,10 @@
 # 🔥 CGrad
         
 ## ⏭️🥅 Next goal:
-- [x] ~~Grad engine~~ -> new task: ~~matmul/div autograd.~~ -> scaler part still remaining.
+- [x] ~~Grad engine~~ -> new task: ~~matmul/div autograd.~~ pow-tensor/pow-scaler -> ~~scaler part still remaining~~.
 - [x] ~~randn Generator~~ -> with seed
 - [ ] still more operation is remaining on Tensors, add them.
-- [ ] Make the Tensor fast: ~~Check the `tensor.c` and `Tensorwrapper.pyx` files again~~, and try to optimize them to make them faster -> still not done.
+- [ ] Make the Tensor fast: ~~Check the `tensor.c` and `tensor.pyx` files again~~, and try to optimize them to make them faster -> still not done.
 - [ ] stop using numpy -> add the reshape, and other stuff.
 - [ ] Build a Tensor for Int, Double, Long, etc. 
 - [ ] Use the Fast matrix multiplication algorithm to reduce the time complexity.
@@ -17,11 +17,13 @@
 Lightweight library for performing tensor operations. **CGrad** is a module designed to handle all gradient computations, and most matrix manipulation and numerical work generally required for tasks in machine learning and deep learning. <br>
 - ####  `Inspired by "Andrej Karpathy's micrograd and George Hotz's tinygrad."`
 
-## 💡 Features
+## 💡 Release Feature (0.3.0)
 
-- 🌀 Support for n-dimensional tensor operations.
-- 🤖 Automatic differentiation for gradient computation.
-- 🛠️ Built-in functions for common tensor operations like addition, multiplication, dot product, etc.
+- New methods `.ones_like`, `.zeros_like`,
+`.ones`, `.zeros` `.sum`, `.mean`, `.median`
+- Now You can do the backprop for scaler `.sum().backward()` and also change backward pass, use your own custom size backward pass `.backward(custom_grad=)`.
+- Try to Optimize the `Tensor` and `AutoGrad`
+- `AutoGrad.no_grad()` add from stop the grad caculation.
 
 ## ⚙️ Installation
 
@@ -40,8 +42,7 @@ pip install cgrad
 
     ```bash
     git clone https://github.com/Ruhaan838/CGrad
-    ```
-    ``` 
+
     python setup.py build_ext --inplace
     pip install .
     ``` 
@@ -88,16 +89,16 @@ result = c * d  # Element-wise multiplication
 
 CGrad supports advanced operations like matrix multiplication etc.:
 ``` python
-a = cgrad.randn((1,2,3))
-b = cgrad.randn((5,3,2))
+a = cgrad.rand((1,2,3))
+b = cgrad.rand((5,3,2))
 result = a @ b
 ```
-Note: `cgrad.matmul` is still underdevelopment.
+Note: `cgrad.matmul` with `axis` is still underdevelopment.
 
 ### 🔥 Gradient Computation
 
 CGrad automatically tracks operations and computes gradients for backpropagation:
-
+#### Using Scaler Values
 ```python
 # Defining tensors with gradient tracking 
 x = cgrad.Tensor([2.0, 3.0], requires_grad=True)
@@ -107,13 +108,39 @@ y = cgrad.Tensor([1.0, 4.0], requires_grad=True)
 z = x * y
 
 # Backpropagation to compute gradients 
-z.backward()
+z.sum().backward()
 
 # Accessing gradients 
 print(x.grad)  # Gradients of x
 print(y.grad)  # Gradients of y
 ```
+#### Usinge Tensor likes:
+``` python
+x = cgrad.Tensor([2.0, 3.0], requires_grad=True)
+y = cgrad.Tensor([1.0, 4.0], requires_grad=True)
 
+# Performing operations 
+z = x + y
+
+z.backward(custom_grad = cgrad.ones_like(x)) # allow to do the grad with you custom grad
+
+print(x.grad)
+print(y.grad)
+```
+#### stop the Grad caculation
+```python
+from cgrad import AutoGrad
+
+x = cgrad.Tensor([2.0, 3.0], requires_grad=True)
+y = cgrad.Tensor([1.0, 4.0], requires_grad=True)
+
+with AutoGrad.no_grad():
+    z = x + y #only caculate the value not grad
+    print(z.requires_grad)
+
+w = x * y
+print(w.requires_grad)
+```
 ## 📖 Documentation
 
 For more detailed information, please visit our [documentation website](docs/index.html).
@@ -121,15 +148,14 @@ For more detailed information, please visit our [documentation website](docs/ind
 ## 🤝 Contributing
 
 I ❤️ contributions! If you’d like to contribute to **CGrad**, please:
-```
-You can contribute to code improvement and documentation editing.
-```
-```
-If any issue is found, report it on the GitHub issue
-```
-1. 🍴 Clone the repository.
-2. 🌱 Create a new branch for your feature or bugfix.
-3. ✉️ Submit a pull request.
+
+- You can contribute to code improvement and documentation editing.
+
+- If any issue is found, report it on the GitHub issue
+
+    1. 🍴 Clone the repository or fork the repository.
+    2. 🌱 Create a new branch for your feature or bugfix.
+    3. ✉️ Submit a pull request.
 
 ## 📖 Reading
 

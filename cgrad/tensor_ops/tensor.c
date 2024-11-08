@@ -198,6 +198,7 @@ void pow_two_tensor(float *data1, float *data2, float *r_data,
     free(r_stride);
 }
 
+// incomplete
 void sum_tensor(float* data1, int* shape1, int dim1, 
                 float* r_data, int* r_shape, int axis, int keepdims) {
     int i, j, k;

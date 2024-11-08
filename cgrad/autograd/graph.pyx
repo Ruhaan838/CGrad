@@ -1,6 +1,5 @@
-from cgrad.tensor.Tensorwrapper import Tensor
+from cgrad.tensor import Tensor
 from cgrad.optium.basic_ops import ones
-import numpy as np
 
 cdef class BackwardGraph:
 
@@ -8,7 +7,7 @@ cdef class BackwardGraph:
     cdef set visited
 
     @staticmethod
-    def execute(output: Tensor):
+    def execute(output: Tensor, grad:Tensor):
         topo = []
         visited = set()
         
@@ -19,10 +18,10 @@ cdef class BackwardGraph:
                     topo_sort_helper(child)
                 topo.append(node)
         
-        if output.grad is None:
-            output.grad = ones(output.shape, require_grad=False)
+        if grad is None:
+            grad = ones(output.shape, requires_grad=False)
         
         topo_sort_helper(output)
         
         for node in reversed(topo):
-            node._backward()
+            node._backward(grad)
