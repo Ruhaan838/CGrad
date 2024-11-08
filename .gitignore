@@ -1,18 +1,21 @@
 /build
 /cgrad/__pycache__
-/cgrad/tensor/__pycache__
+/cgrad/tensor_ops/__pycache__
 /cgrad/optium/__pycache__
+/cgrad/autograd/__pycache__
 
-/cgrad/tensor/Tensorwrapper.cp312-win_amd64.pyd
+/cgrad/tensor.c
+/cgrad/tensor.cpython-312-darwin.so
+/cgrad/tensor.html
 
-/cgrad/tensor/Tensorwrapper.cpython-312-darwin.so
-/cgrad/tensor/Tensorwrapper.cpython-312-x86_64-linux-gnu.so
+/cgrad/tensor_ops/Tensorwrapper.cpython-312-darwin.so
+/cgrad/tensor_ops/Tensorwrapper.cpython-312-x86_64-linux-gnu.so
 /cgrad/optium/basic_ops.cpython-312-darwin.so
 /cgrad/autograd/calcgrad.cpython-312-darwin.so
 /cgrad/autograd/graph.cpython-312-darwin.so
 /cgrad/autograd/grad_funcs.cpython-312-darwin.so
 
-/cgrad/tensor/Tensorwrapper.c
+/cgrad/tensor_ops/Tensorwrapper.c
 /cgrad/optium/basic_ops.c
 /cgrad/autograd/calcgrad.c
 /cgrad/autograd/grad_funcs.c
@@ -21,7 +24,7 @@
 
 /cgrad/autograd/grad_funcs.html
 /cgrad/autograd/graph.html
-/cgrad/tensor/Tensorwrapper.html
+/cgrad/tensor_ops/Tensorwrapper.html
 /cgrad/autograd/calcgrad.html
 /cgrad/optium/basic_ops.html
 
