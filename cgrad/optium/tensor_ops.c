@@ -3,7 +3,7 @@
 #include <time.h>
 
 #include "../storage/Float_tensor.h"
-#include "../tensor/tensor.c"
+#include "../tensor_ops/tensor.c"
 #include "philox_random.c" // random number generator
 
 void random_tensor(int *shape, int ndim, int min, int max, int seed, float* data) {
