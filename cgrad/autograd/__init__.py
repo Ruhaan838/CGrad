@@ -1,2 +1,2 @@
-from .grad_funcs import AutoGrad
-__all__ = ['AutoGrad']
+from .grad_funcs import AutoGrad, GradMode
+__all__ = ['AutoGrad', 'GradMode']
