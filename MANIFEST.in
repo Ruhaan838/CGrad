@@ -1,4 +1,5 @@
-recursive-include cgrad/tensor *.pyx *.c *.pyi
+recursive-include cgrad *.pyi *.pyx *.c
+recursive-include cgrad/tensor_ops *.pyx *.c *.pyi
 recursive-include cgrad/gemm *.c
 recursive-include cgrad/optium *.pyx *.c *.pyi
-recursive-include cgrad/autograd *.pyx
+recursive-include cgrad/autograd *.pyx *pyi

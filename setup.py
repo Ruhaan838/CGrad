@@ -4,14 +4,14 @@ import numpy
 
 ext_modules = [
     Extension(
-        "cgrad.tensor.Tensorwrapper", 
+        "cgrad.tensor", 
         sources=[
-            'cgrad/tensor/Tensorwrapper.pyx',
-            'cgrad/tensor/tensor.c',
+            'cgrad/tensor.pyx',
+            'cgrad/tensor_ops/tensor.c',
             'cgrad/gemm/matmulNd.c',
         ],
         include_dirs=[numpy.get_include()],
-        extra_compile_args=["-O2"]  # Add optimization flag
+        extra_compile_args=["-O2"]
     ),
     Extension(
         "cgrad.optium.basic_ops",
@@ -49,13 +49,13 @@ setup(
     author="Ruhaan",  
     author_email="ruhaan123dalal@gmail.com", 
     url="https://github.com/Ruhaan838/CGrad", 
-    ext_modules=cythonize(ext_modules, annotate=True), 
+    ext_modules=cythonize(ext_modules), 
     license="MIT",  
     install_requires=["numpy","cython"], 
     package_dir={'': '.'},  
     packages=find_packages(), 
     package_data={
-        'cgrad.Tensor':['cgrad/tensor/Tensorwrapper.pyi'],
+        'cgrad.Tensor':['cgrad/tensor.pyi'],
         'cgrad':['cgrad/optium/basic_ops.pyi'],
     },
     include_package_data=True,  
