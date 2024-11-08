@@ -3,19 +3,20 @@ from cgrad.optium.basic_ops import zeros, ones
 import numpy as np
 from contextlib import contextmanager
 
-requires_grad_enabled = True
 
 cdef class AutoGrad:
 
     @staticmethod
-    def init_grad(tensor:Tensor, input_shape:tuple):
-        if tensor.grad is None and tensor.requires_grad and requires_grad_enabled:
+    def init_grad(tensor:Tensor, input_shape:tuple, with_ones:bool=False):
+        if tensor.grad is None and tensor.requires_grad:
             tensor.grad = zeros(shape=input_shape, requires_grad=False)
+        if tensor.grad is None and tensor.requires_grad and with_ones:
+            tensor.grad = ones(shape=input_shape, requires_grad=False)
 
     @staticmethod
     def accumulate_grad(tensor: Tensor, acc_tensor: Tensor):
         """Accumulate gradients into the tensor's gradient."""
-        if tensor.grad is None and requires_grad_enabled:
+        if tensor.grad is None:
             tensor.grad = zeros(tensor.shape)
         else:
             acc_tensor.requires_grad = False
@@ -35,14 +36,16 @@ cdef class AutoGrad:
         """Calculate gradients for addition/subtraction."""
         def _backward(grad):
 
-            if tensor1.requires_grad and requires_grad_enabled:
+            if tensor1.requires_grad:
                 AutoGrad.init_grad(tensor1, ans_tensor.shape)
+                AutoGrad.init_grad(ans_tensor, ans_tensor.shape, True)
                 val_accumulate = grad
                 AutoGrad.accumulate_grad(tensor1, val_accumulate)
 
             if isinstance(tensor2, Tensor):
-                if tensor2.requires_grad and requires_grad_enabled:
+                if tensor2.requires_grad:
                     AutoGrad.init_grad(tensor2, ans_tensor.shape)
+                    AutoGrad.init_grad(ans_tensor, ans_tensor.shape, True)
                     val_accumulate = grad
                     if is_sub:
                         val_accumulate = -val_accumulate
@@ -56,19 +59,22 @@ cdef class AutoGrad:
         """Calculate gradients for multiplication."""
         def _backward(grad):
             if isinstance(tensor2, Tensor):
-                if tensor1.requires_grad and requires_grad_enabled:
+                if tensor1.requires_grad:
                     AutoGrad.init_grad(tensor1, ans_tensor.shape)
+                    AutoGrad.init_grad(ans_tensor, ans_tensor.shape, True)
                     val_accumulate = tensor2 * ans_tensor.grad
                     AutoGrad.accumulate_grad(tensor1, val_accumulate)
 
-                if tensor2.requires_grad and requires_grad_enabled:
+                if tensor2.requires_grad:
                     AutoGrad.init_grad(tensor2, ans_tensor.shape)
+                    AutoGrad.init_grad(ans_tensor, ans_tensor.shape, True)
                     val_accumulate = tensor1 * ans_tensor.grad
                     AutoGrad.accumulate_grad(tensor2, val_accumulate)
 
             elif isinstance(tensor2, (int,float)):
-                if tensor1.requires_grad and requires_grad_enabled:
+                if tensor1.requires_grad:
                     AutoGrad.init_grad(tensor1, ans_tensor.shape)
+                    AutoGrad.init_grad(ans_tensor, ans_tensor.shape, True)
                     val_accumulate = tensor2 * ans_tensor.grad
                     AutoGrad.accumulate_grad(tensor1, val_accumulate)
 
@@ -79,19 +85,22 @@ cdef class AutoGrad:
         """Calculate gradients for division."""
         def _backward(grad):
             if isinstance(tensor2, Tensor):
-                if tensor1.requires_grad and requires_grad_enabled:
+                if tensor1.requires_grad:
                     AutoGrad.init_grad(tensor1, ans_tensor.shape)
+                    AutoGrad.init_grad(ans_tensor, ans_tensor.shape, True)
                     val_accumulate = (1 / tensor2) * ans_tensor.grad
                     AutoGrad.accumulate_grad(tensor1, val_accumulate)
 
-                if tensor2.requires_grad and requires_grad_enabled:
+                if tensor2.requires_grad:
                     AutoGrad.init_grad(tensor2, ans_tensor.shape)
+                    AutoGrad.init_grad(ans_tensor, ans_tensor.shape, True)
                     val_accumulate = ((-tensor1) / (tensor2 ** 2)) * ans_tensor.grad
                     AutoGrad.accumulate_grad(tensor2, val_accumulate)
 
             elif isinstance(tensor2, (int, float)):
-                if tensor1.requires_grad and requires_grad_enabled:
+                if tensor1.requires_grad:
                     AutoGrad.init_grad(tensor1, ans_tensor.shape)
+                    AutoGrad.init_grad(ans_tensor, ans_tensor.shape, True)
                     val_accumulate = (1/ tensor2) * ans_tensor.grad
                     AutoGrad.accumulate_grad(tensor1, val_accumulate)
 
@@ -101,12 +110,14 @@ cdef class AutoGrad:
     def matmul_grad_tensor(tensor1: Tensor, tensor2: Tensor, ans_tensor:Tensor):
         """Calculate gradients for matrix multiplication."""
         def _backward(grad):
-            if tensor1.requires_grad and requires_grad_enabled:
+            if tensor1.requires_grad:
                 AutoGrad.init_grad(tensor1, ans_tensor.shape)
+                AutoGrad.init_grad(ans_tensor, ans_tensor.shape, True)
                 val_accumulate = ans_tensor.grad @ tensor2.transpose()
                 AutoGrad.accumulate_grad_matmul(tensor1, val_accumulate)
-            if tensor2.requires_grad and requires_grad_enabled:
+            if tensor2.requires_grad:
                 AutoGrad.init_grad(tensor2, ans_tensor.shape)
+                AutoGrad.init_grad(ans_tensor, ans_tensor.shape, True)
                 val_accumulate = tensor1.transpose() @ ans_tensor.grad
                 AutoGrad.accumulate_grad_matmul(tensor2, val_accumulate)
         return _backward
@@ -115,7 +126,7 @@ cdef class AutoGrad:
     def sum_grad(tensor: Tensor):
         """Calculate gradient for sum."""
         def _backward(grad):
-            if tensor.requires_grad and requires_grad_enabled:
+            if tensor.requires_grad:
                 AutoGrad.init_grad(tensor, tensor.shape)
                 tensor.grad += ones(tensor.shape) * grad
         return _backward
@@ -124,7 +135,7 @@ cdef class AutoGrad:
     def mean_grad(tensor: Tensor):
         """Calculate gradient for mean."""
         def _backward(grad):
-            if tensor.requires_grad and requires_grad_enabled:
+            if tensor.requires_grad:
                 AutoGrad.init_grad(tensor, tensor.shape)
                 tensor.grad += (ones(tensor.shape) * grad) / tensor.numel
         return _backward

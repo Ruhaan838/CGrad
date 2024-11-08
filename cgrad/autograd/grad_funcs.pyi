@@ -5,7 +5,7 @@ from contextlib import contextmanager
 class AutoGrad:
     
     @staticmethod
-    def init_grad(tensor:Tensor, input_shape:Tuple): ...
+    def init_grad(tensor:Tensor, input_shape:Tuple, with_ones:bool=False): ...
     """
         Initialisation the Grad of the tensor with zeros.
     """
