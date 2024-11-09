@@ -17,7 +17,7 @@
 Lightweight library for performing tensor operations. **CGrad** is a module designed to handle all gradient computations, and most matrix manipulation and numerical work generally required for tasks in machine learning and deep learning. <br>
 - ####  `Inspired by "Andrej Karpathy's micrograd and George Hotz's tinygrad."`
 
-## 💡 Release Feature (0.3.0)
+## 💡 Release Feature (0.0.3)
 
 - New methods `.ones_like`, `.zeros_like`,
 `.ones`, `.zeros` `.sum`, `.mean`, `.median`
