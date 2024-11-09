@@ -143,7 +143,7 @@ print(w.requires_grad)
 ```
 ## 📖 Documentation
 
-For more detailed information, please visit our [documentation website](docs/index.html).
+For more detailed information, please visit our [documentation website](docs).
 
 ## 🤝 Contributing
 
