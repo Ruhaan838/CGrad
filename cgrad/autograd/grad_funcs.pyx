@@ -27,8 +27,12 @@ cdef class AutoGrad:
     @staticmethod
     def accumulate_grad_matmul(tensor: Tensor, acc_tensor: Tensor):
         """Accumulate gradient for matmul operation."""
+        if tensor.grad is None:
+            tensor.grad = zeros(acc_tensor.shape, requires_grad=False)
+            
+        acc_tensor.requires_grad = False
         if tensor.grad.shape != acc_tensor.shape:
-            acc_tensor = Tensor(np.sum(acc_tensor.item, axis=tuple(range(acc_tensor.ndim - tensor.grad.ndim))).tolist())
+            acc_tensor = acc_tensor.sum(axis=tuple(range(acc_tensor.ndim - tensor.grad.ndim)))
         tensor.grad += acc_tensor
 
     @staticmethod
@@ -111,12 +115,10 @@ cdef class AutoGrad:
         """Calculate gradients for matrix multiplication."""
         def _backward(grad):
             if tensor1.requires_grad:
-                AutoGrad.init_grad(tensor1, ans_tensor.shape)
                 AutoGrad.init_grad(ans_tensor, ans_tensor.shape, True)
                 val_accumulate = ans_tensor.grad @ tensor2.transpose()
                 AutoGrad.accumulate_grad_matmul(tensor1, val_accumulate)
             if tensor2.requires_grad:
-                AutoGrad.init_grad(tensor2, ans_tensor.shape)
                 AutoGrad.init_grad(ans_tensor, ans_tensor.shape, True)
                 val_accumulate = tensor1.transpose() @ ans_tensor.grad
                 AutoGrad.accumulate_grad_matmul(tensor2, val_accumulate)
