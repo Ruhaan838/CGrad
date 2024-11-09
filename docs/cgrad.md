@@ -1,6 +1,6 @@
 ## cgrad.rand
 
-```
+```python
 cgrad.rand(shape, requires_grad = False) -> Tensor
 ```
 
@@ -12,7 +12,7 @@ cgrad.rand(shape, requires_grad = False) -> Tensor
 
 ## cgrad.randomrange
 
-```
+```python
 cgrad.randrange(shape, requires_grad = False, min = 0, max = 1000) -> Tensor
 ```
 **Parameters**<br>
@@ -25,7 +25,7 @@ cgrad.randrange(shape, requires_grad = False, min = 0, max = 1000) -> Tensor
 
 ## cgrad.ones
 
-```
+```python
 cgrad.ones(shape, requires_grad = False) -> Tensor
 ```
 **Parameters**<br>
@@ -36,7 +36,7 @@ cgrad.ones(shape, requires_grad = False) -> Tensor
 
 ## cgrad.ones_like
 
-```
+```python
 cgrad.ones_like(tensor, requires_grad = False) -> Tensor
 ```
 **Parameters**<br>
@@ -47,7 +47,7 @@ cgrad.ones_like(tensor, requires_grad = False) -> Tensor
 
 ## cgrad.zeros
 
-```
+```python
 cgrad.zeros(shape, requires_grad = False) -> Tensor
 ```
 **Parameters**<br>
@@ -58,7 +58,7 @@ cgrad.zeros(shape, requires_grad = False) -> Tensor
 
 ## cgrad.zeros_like
 
-```
+```python
 cgrad.zeros_like(tensor, requires_grad = False) -> Tensor
 ```
 **Parameters**<br>

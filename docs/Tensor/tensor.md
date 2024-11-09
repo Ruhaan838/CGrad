@@ -1,6 +1,6 @@
 # cgrad.Tensor
 
-```
+```python
 cgrad.Tensor(data, requires_grad=False) -> Tensor
 ```
 
@@ -48,25 +48,25 @@ cgrad.Tensor(data, requires_grad=False) -> Tensor
 ## Variables
 
 - ### Tensor.item
-    ```
+    ```python
     Tensor.item -> List[float]
     ```
     - This will return the item in the Tensor in from of List.
 
 - ### Tensor.shape
-    ```
+    ```python
     Tensor.shape -> Tuple[int]
     ```
     - This will return the shape of the tensor in from of Tuple.
 
 - ### Tensor.ndim
-    ```
+    ```python
     Tensor.ndim -> int
     ```
     - This will return the dim of the tensor in from of int.
 
 - ### Tensor.numel
-    ```
+    ```python
     Tensor.numel -> int
     ```
     - This will return the number of elements in the tensor in from of int.
@@ -74,23 +74,23 @@ cgrad.Tensor(data, requires_grad=False) -> Tensor
 ## Setters and Variables
 
 - ### Tensor.grad
-    ```
+    ```python
     Tensor.grad -> Tensor
     ```
     - This will return the current Gradient of the tensor in from of Tensor.
     - You can set the Tensor using:
-    ```
+    ```python
     Tensor.grad(value) -> Tensor
     ```
     - value: in Tensor from.
 
 - ### Tensor.requires_grad
-    ```
+    ```python
     Tensor.requires_grad -> bool
     ```
     - This will give the status of the tensor grad caculation in from of bool.
     - You can set the Tensor using:
-    ```
+    ```python
     Tensor.requires_grad(value) -> None
     ```
     - value: in from of bool
