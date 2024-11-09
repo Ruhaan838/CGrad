@@ -102,10 +102,10 @@ class Tensor:
     """
         mean the over the axis with check if keepdims.
     """
-    def median(self, axis:int=None, keepdims:Optional[bool]=False) -> Tensor: ...
-    """
-        median the over the axis with check if keepdims.
-    """
+    # def median(self, axis:int=None, keepdims:Optional[bool]=False) -> Tensor: ...
+    # """
+    #     median the over the axis with check if keepdims.
+    # """
     def zeros_(self) -> None: ...
     """
         Set the tensor values to zero.
