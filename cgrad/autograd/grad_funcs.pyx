@@ -143,12 +143,10 @@ cdef class AutoGrad:
     @contextmanager
     @staticmethod
     def no_grad():
-        # Disable gradients temporarily
         GradMode.set_enabled(False)
         try:
             yield
         finally:
-            # Re-enable gradients after block
             GradMode.set_enabled(True)
 
 class GradMode:
