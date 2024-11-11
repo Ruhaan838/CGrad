@@ -131,7 +131,7 @@ cdef class Tensor:
         ans = Tensor(arr_data, requires_grad=self.requires_grad)
         
         if ans.requires_grad:
-            ans.__backward_init__("<MeanBackward0>", AutoGrad.mean_grad(self))
+            ans.__backward_init__("<MeanBackward0>", AutoGrad.mean_grad(self,ans))
             ans._prev.add(self)
         return ans
     

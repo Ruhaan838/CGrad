@@ -43,14 +43,14 @@ cdef class AutoGrad:
             if tensor1.requires_grad:
                 AutoGrad.init_grad(tensor1, ans_tensor.shape)
                 AutoGrad.init_grad(ans_tensor, ans_tensor.shape, True)
-                val_accumulate = grad
+                val_accumulate = ans_tensor.grad
                 AutoGrad.accumulate_grad(tensor1, val_accumulate)
 
             if isinstance(tensor2, Tensor):
                 if tensor2.requires_grad:
                     AutoGrad.init_grad(tensor2, ans_tensor.shape)
                     AutoGrad.init_grad(ans_tensor, ans_tensor.shape, True)
-                    val_accumulate = grad
+                    val_accumulate = ans_tensor.grad
                     if is_sub:
                         val_accumulate = -val_accumulate
                     AutoGrad.accumulate_grad(tensor2, val_accumulate)
@@ -134,12 +134,13 @@ cdef class AutoGrad:
         return _backward
 
     @staticmethod
-    def mean_grad(tensor: Tensor):
+    def mean_grad(tensor: Tensor, ans_tensor:Tensor):
         """Calculate gradient for mean."""
         def _backward(grad):
             if tensor.requires_grad:
                 AutoGrad.init_grad(tensor, tensor.shape)
-                tensor.grad += (ones(tensor.shape) * grad) / tensor.numel
+                val_accumulate = (ones(ans_tensor.shape) * grad) / tensor.numel
+                AutoGrad.accumulate_grad(tensor, val_accumulate)
         return _backward
     
     @contextmanager
