@@ -155,7 +155,8 @@ cdef class Tensor:
         
         if custom_grad is None:
             if len(self.item) != 1:
-                raise ValueError("Provide the custom grad or use the scaler value to caculate the grad.")
+                raise ValueError("Provide the custom grad or use the scaler value to calculate the grad.")
+            custom_grad = Tensor(np.ones(self.shape).tolist(), requires_grad=False)
 
         return BackwardGraph.execute(self, custom_grad)
 
@@ -166,12 +167,14 @@ cdef class Tensor:
         """
         if isinstance(other, Tensor):
             ans = self._add_tensor(other)
-            ans.__backward_init__("<AddBackward0>", AutoGrad.add_grad_tensor(self, other, ans))
+            if ans.requires_grad:
+                ans.__backward_init__("<AddBackward0>", AutoGrad.add_grad_tensor(self, other, ans))
             return ans
 
         elif isinstance(other, (int, float)):
             ans = self._add_scalar(other)
-            ans.__backward_init__("<AddBackward1>", AutoGrad.add_grad_tensor(self, other, ans))
+            if ans.requires_grad:
+                ans.__backward_init__("<AddBackward1>", AutoGrad.add_grad_tensor(self, other, ans))
             return ans
 
         else:
@@ -181,7 +184,8 @@ cdef class Tensor:
 
         if isinstance(other, (int, float)):
             ans = self._add_scalar(other)
-            ans.__backward_init__("<AddBackward1>", AutoGrad.add_grad_tensor(self, other, ans))
+            if ans.requires_grad:
+                ans.__backward_init__("<AddBackward1>", AutoGrad.add_grad_tensor(self, other, ans))
             return ans
         else:
             raise TypeError(f"Unsupport the type ({type(other)})")
@@ -192,12 +196,14 @@ cdef class Tensor:
         """
         if isinstance(other, Tensor):
             ans = self._add_tensor(other, sub=True)
-            ans.__backward_init__("<SubBackward0>", AutoGrad.add_grad_tensor(self, other, ans, is_sub=True))
+            if ans.requires_grad:
+                ans.__backward_init__("<SubBackward0>", AutoGrad.add_grad_tensor(self, other, ans, is_sub=True))
             return ans
 
         elif isinstance(other, (int, float)):
             ans = self._add_scalar(-other)
-            ans.__backward_init__("<SubBackward1>", AutoGrad.add_grad_tensor(self, other, ans))
+            if ans.requires_grad:
+                ans.__backward_init__("<SubBackward1>", AutoGrad.add_grad_tensor(self, other, ans))
             return ans
         else:
             raise TypeError(f"Unsupported type ({type(other)})")
@@ -208,7 +214,8 @@ cdef class Tensor:
         """
         if isinstance(other, (int, float)):
             ans = self - other
-            ans.__backward_init__("<SubBackward1>", AutoGrad.add_grad_tensor(self, other, ans))
+            if ans.requires_grad:
+                ans.__backward_init__("<SubBackward1>", AutoGrad.add_grad_tensor(self, other, ans))
             return ans
         else:
             raise TypeError(f"Unsupported type ({type(other)})")
@@ -220,12 +227,14 @@ cdef class Tensor:
         """
         if isinstance(other, Tensor):
             ans = self._mul_tensor(other)
-            ans.__backward_init__("<MulBackward0>", AutoGrad.mul_grad_tensor(self, other, ans))
+            if ans.requires_grad:
+                ans.__backward_init__("<MulBackward0>", AutoGrad.mul_grad_tensor(self, other, ans))
             return ans
 
         elif isinstance(other, (int, float)):
             ans = self._mul_scaler(other)
-            ans.__backward_init__("<MulBackward1>", AutoGrad.mul_grad_tensor(self, other, ans))
+            if ans.requires_grad:
+                ans.__backward_init__("<MulBackward1>", AutoGrad.mul_grad_tensor(self, other, ans))
             return ans  
         else:
             raise TypeError(f"Unsupport the type ({type(other)})")
@@ -234,7 +243,8 @@ cdef class Tensor:
 
         if isinstance(other, (int, float)):
             ans = self._mul_scaler(other)
-            ans.__backward_init__("<MulBackward1>", AutoGrad.mul_grad_tensor(self, other, ans))
+            if ans.requires_grad:
+                ans.__backward_init__("<MulBackward1>", AutoGrad.mul_grad_tensor(self, other, ans))
             return ans  
         else:
             raise TypeError(f"Unsupport the type ({type(other)})")
@@ -245,14 +255,16 @@ cdef class Tensor:
         """
         if isinstance(other, Tensor):
             ans = self._mul_tensor(other, True)
-            ans.__backward_init__("<DivBackward0>", AutoGrad.div_grad_tensor(self, other, ans))
+            if ans.requires_grad:
+                ans.__backward_init__("<DivBackward0>", AutoGrad.div_grad_tensor(self, other, ans))
             return ans
 
         elif isinstance(other, (int, float)):
             if other == 0:
                 return Tensor((np.ones(self.shape) * np.inf).tolist(), requires_grad=self.requires_grad)
             ans = self._mul_scaler(other ** -1)
-            ans.__backward_init__("<DivBackward1>", AutoGrad.div_grad_tensor(self, other, ans))
+            if ans.requires_grad:
+                ans.__backward_init__("<DivBackward1>", AutoGrad.div_grad_tensor(self, other, ans))
             return ans
 
         else:
@@ -263,7 +275,8 @@ cdef class Tensor:
         if isinstance(other, (int, float)):
             new_self = self ** -1
             ans = new_self * other
-            ans.__backward_init__("<DivBackward1>", AutoGrad.div_grad_tensor(self, other, ans))
+            if ans.requires_grad:
+                ans.__backward_init__("<DivBackward1>", AutoGrad.div_grad_tensor(self, other, ans))
             return ans
 
         else:
@@ -272,7 +285,8 @@ cdef class Tensor:
     def __matmul__(self, other):
         if isinstance(other, Tensor):
             ans = self._matmul(other)
-            ans.__backward_init__("<MatMulBackward0>", AutoGrad.matmul_grad_tensor(self, other, ans))
+            if ans.requires_grad:
+                ans.__backward_init__("<MatMulBackward0>", AutoGrad.matmul_grad_tensor(self, other, ans))
             return ans
 
         else:
@@ -284,12 +298,14 @@ cdef class Tensor:
         """
         if isinstance(other, Tensor):
             ans = self._pow_tensor(other)
-            ans.__backward_init__("<PowBackward0>", None)
+            if ans.requires_grad:
+                ans.__backward_init__("<PowBackward0>", None)
             return ans
 
         elif isinstance(other, (int, float)):
             ans = self._pow_scaler(other)
-            ans.__backward_init__("<PowBackward1>", None)
+            if ans.requires_grad:
+                ans.__backward_init__("<PowBackward1>", None)
             return ans
 
         else:
